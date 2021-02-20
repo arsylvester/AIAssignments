@@ -96,31 +96,45 @@ def depthFirstSearch(problem):
     from util import Queue
     from util import Stack
     succ = problem.getSuccessors(problem.getStartState())
-    successQueue = Stack()
+    allSuccessors = Stack()
+
     for element in succ:
-        successQueue.push(element)
-    path = Queue()
+        allSuccessors.push(element)
+    path = Stack()
     hasBeenTo = []
-    while not successQueue.isEmpty():
-        node = successQueue.pop()
-        print("node:", node)
+
+    while not allSuccessors.isEmpty():
+        node = allSuccessors.pop()
         path.push(node)
+        hasBeenTo.append(node[0])
+
+        #check if the current node is the goal node, returning the directions if so
         if problem.isGoalState(node[0]):
             directions = []
             while not path.isEmpty():
-                directions.append(path.pop()[1])
+                directions.insert(0, path.pop()[1])
             print("Goal Found with path:", directions)
             return directions
-        S = problem.getSuccessors(node[0])
-        for element in S:
-            if not element in hasBeenTo:
-                hasBeenTo.append(element)
-                successQueue.push(element)
 
+        newSuccessors = 0   #the number of successors to this node that have not yet been visited
+        backtracked = False #whether we hit a dead end in DFS and are backtracking to an earlier node
 
-    a = succ[0]
-    aSucc = problem.getSuccessors(a[0])
-    b = aSucc[0]
+        #backtrack as needed until there is a new successor to check
+        while newSuccessors == 0 and not path.isEmpty():
+            S = problem.getSuccessors(node[0])
+            for element in S:
+                if not element[0] in hasBeenTo:
+                    allSuccessors.push(element)
+                    newSuccessors += 1
+
+                    #we backtracked to find a node with valid successors but already removed it from the path. adding it back here
+                    if backtracked:
+                        path.push(node)
+
+            #backtrack to an earlier node if there's no valid paths from here
+            if newSuccessors == 0:
+                node = path.pop()
+                backtracked = True
 
     return  [fail]
 
