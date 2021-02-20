@@ -101,18 +101,19 @@ def depthFirstSearch(problem):
     for element in succ:
         allSuccessors.push(element)
     path = Stack()
-    hasBeenTo = []
+    hasBeenTo = [problem.getStartState()]
 
     while not allSuccessors.isEmpty():
         node = allSuccessors.pop()
         path.push(node)
+        #print("Node pushed:", node)
         hasBeenTo.append(node[0])
 
         #check if the current node is the goal node, returning the directions if so
         if problem.isGoalState(node[0]):
             directions = []
             while not path.isEmpty():
-                directions.insert(0, path.pop()[1])
+                directions.insert(0, path.pop()[1]) 
             print("Goal Found with path:", directions)
             return directions
 
@@ -130,10 +131,12 @@ def depthFirstSearch(problem):
                     #we backtracked to find a node with valid successors but already removed it from the path. adding it back here
                     if backtracked:
                         path.push(node)
+                        #print("Node pushed:", node)
 
             #backtrack to an earlier node if there's no valid paths from here
             if newSuccessors == 0:
                 node = path.pop()
+                #print("Node popped:", node)
                 backtracked = True
 
     return  [fail]
