@@ -91,7 +91,38 @@ def depthFirstSearch(problem):
     s = Directions.SOUTH
     w = Directions.WEST
     e = Directions.EAST
-    return  [s, s, w, s]
+    fail = Directions.STOP
+
+    from util import Queue
+    from util import Stack
+    succ = problem.getSuccessors(problem.getStartState())
+    successQueue = Stack()
+    for element in succ:
+        successQueue.push(element)
+    path = Queue()
+    hasBeenTo = []
+    while not successQueue.isEmpty():
+        node = successQueue.pop()
+        print("node:", node)
+        path.push(node)
+        if problem.isGoalState(node[0]):
+            directions = []
+            while not path.isEmpty():
+                directions.append(path.pop()[1])
+            print("Goal Found with path:", directions)
+            return directions
+        S = problem.getSuccessors(node[0])
+        for element in S:
+            if not element in hasBeenTo:
+                hasBeenTo.append(element)
+                successQueue.push(element)
+
+
+    a = succ[0]
+    aSucc = problem.getSuccessors(a[0])
+    b = aSucc[0]
+
+    return  [fail]
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
