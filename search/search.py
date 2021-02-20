@@ -88,9 +88,10 @@ def depthFirstSearch(problem):
     
     "*** YOUR CODE HERE ***"
     from game import Directions
+    n = Directions.NORTH
+    e = Directions.EAST
     s = Directions.SOUTH
     w = Directions.WEST
-    e = Directions.EAST
     fail = Directions.STOP
 
     from util import Queue
@@ -125,13 +126,14 @@ def depthFirstSearch(problem):
             S = problem.getSuccessors(node[0])
             for element in S:
                 if not element[0] in hasBeenTo:
-                    allSuccessors.push(element)
                     newSuccessors += 1
 
                     #we backtracked to find a node with valid successors but already removed it from the path. adding it back here
-                    if backtracked:
+                    if backtracked and newSuccessors == 1:
                         path.push(node)
                         #print("Node pushed:", node)
+                    elif not backtracked:
+                        allSuccessors.push(element)
 
             #backtrack to an earlier node if there's no valid paths from here
             if newSuccessors == 0:
