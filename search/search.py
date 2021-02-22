@@ -187,7 +187,45 @@ def breadthFirstSearch(problem):
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from game import Directions
+    fail = Directions.STOP
+
+    from util import Queue
+    from util import PriorityQueue
+    from util import Stack
+    succ = problem.getSuccessors(problem.getStartState())
+    allSuccessors = PriorityQueue()
+    allPaths = PriorityQueue() #A queue of lists for a path of each function.
+
+    
+    hasBeenTo = [problem.getStartState()]
+
+    for element in succ:
+        allSuccessors.push(element, element[2])
+        allPaths.push([element[1]], element[2])
+        hasBeenTo.append(element[0])
+        
+    while not allSuccessors.isEmpty():
+        node = allSuccessors.pop()
+        #print("Node is ", node)
+        parentPath = allPaths.pop()
+        #hasBeenTo.append(node[0])
+
+        #check if the current node is the goal node, returning the directions if so
+        if problem.isGoalState(node[0]):
+            return parentPath
+
+        #Add Successors if not found already
+        S = problem.getSuccessors(node[0])
+        for element in S:
+            if not element[0] in hasBeenTo:
+                allSuccessors.push(element, element[2])
+                hasBeenTo.append(element[0])
+                newPath = parentPath.copy()
+                newPath.append(element[1])
+                allPaths.push(newPath, element[2]) 
+
+    return  [fail]
 
 def nullHeuristic(state, problem=None):
     """
