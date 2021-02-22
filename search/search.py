@@ -81,11 +81,11 @@ def depthFirstSearch(problem):
 
     To get started, you might want to try some of these simple commands to
     understand the search problem that is being passed in:
-    """
+    
     print("Start:", problem.getStartState())
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
-    
+    """
     "*** YOUR CODE HERE ***"
     from game import Directions
     n = Directions.NORTH
@@ -115,7 +115,7 @@ def depthFirstSearch(problem):
             directions = []
             while not path.isEmpty():
                 directions.insert(0, path.pop()[1]) 
-            print("Goal Found with path:", directions)
+            #print("Goal Found with path:", directions)
             return directions
 
         newSuccessors = 0   #the number of successors to this node that have not yet been visited
@@ -146,7 +146,40 @@ def depthFirstSearch(problem):
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from game import Directions
+    fail = Directions.STOP
+
+    from util import Queue
+    from util import Stack
+    succ = problem.getSuccessors(problem.getStartState())
+    allSuccessors = Queue()
+    allPaths = Queue() #A queue of lists for a path of each function.
+
+    for element in succ:
+        allSuccessors.push(element)
+        allPaths.push([element[1]])
+
+    hasBeenTo = [problem.getStartState()]
+
+    while not allSuccessors.isEmpty():
+        node = allSuccessors.pop()
+        parentPath = allPaths.pop()
+        hasBeenTo.append(node[0])
+
+        #check if the current node is the goal node, returning the directions if so
+        if problem.isGoalState(node[0]):
+            return parentPath
+
+        #Add Successors if not found already
+        S = problem.getSuccessors(node[0])
+        for element in S:
+            if not element[0] in hasBeenTo:
+                allSuccessors.push(element)
+                newPath = parentPath.copy()
+                newPath.append(element[1])
+                allPaths.push(newPath) 
+
+    return  [fail]
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
