@@ -196,34 +196,38 @@ def uniformCostSearch(problem):
     succ = problem.getSuccessors(problem.getStartState())
     allSuccessors = PriorityQueue()
     allPaths = PriorityQueue() #A queue of lists for a path of each function.
-
+    allPathsCost = PriorityQueue()
     
-    hasBeenTo = [problem.getStartState()]
+    hasExpanded = [problem.getStartState()]
 
     for element in succ:
         allSuccessors.push(element, element[2])
         allPaths.push([element[1]], element[2])
-        hasBeenTo.append(element[0])
+        allPathsCost.push(element[2], element[2])
         
     while not allSuccessors.isEmpty():
         node = allSuccessors.pop()
-        #print("Node is ", node)
         parentPath = allPaths.pop()
-        #hasBeenTo.append(node[0])
+        pathCost = allPathsCost.pop()
+        if not node[0] in hasExpanded:
+            #print("Node is ", node)
 
-        #check if the current node is the goal node, returning the directions if so
-        if problem.isGoalState(node[0]):
-            return parentPath
+            hasExpanded.append(node[0])
 
-        #Add Successors if not found already
-        S = problem.getSuccessors(node[0])
-        for element in S:
-            if not element[0] in hasBeenTo:
-                allSuccessors.push(element, element[2])
-                hasBeenTo.append(element[0])
-                newPath = parentPath.copy()
-                newPath.append(element[1])
-                allPaths.push(newPath, element[2]) 
+            #check if the current node is the goal node, returning the directions if so
+            if problem.isGoalState(node[0]):
+                return parentPath
+
+            #Add Successors if not found already
+            S = problem.getSuccessors(node[0])
+            for element in S:
+                if not element[0] in hasExpanded:
+                    g = pathCost + element[2]
+                    allSuccessors.push(element, g)
+                    newPath = parentPath.copy()
+                    newPath.append(element[1])
+                    allPaths.push(newPath, g) 
+                    allPathsCost.push(g, g)
 
     return  [fail]
 
