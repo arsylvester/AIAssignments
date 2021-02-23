@@ -241,7 +241,50 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from game import Directions
+    fail = Directions.STOP
+
+    from util import Queue
+    from util import PriorityQueue
+    from util import Stack
+    succ = problem.getSuccessors(problem.getStartState())
+    allSuccessors = PriorityQueue()
+    allPaths = PriorityQueue() #A queue of lists for a path of each function.
+    allPathsGCost = PriorityQueue()
+    
+    hasExpanded = [problem.getStartState()]
+
+    for element in succ:
+        allSuccessors.push(element, element[2] + heuristic(element[0], problem))
+        allPaths.push([element[1]], element[2] + heuristic(element[0], problem))
+        allPathsGCost.push(element[2], element[2] + heuristic(element[0], problem))
+        
+    while not allSuccessors.isEmpty():
+        node = allSuccessors.pop()
+        parentPath = allPaths.pop()
+        pathCost = allPathsGCost.pop()
+        if not node[0] in hasExpanded:
+            #print("Node is ", node)
+
+            hasExpanded.append(node[0])
+
+            #check if the current node is the goal node, returning the directions if so
+            if problem.isGoalState(node[0]):
+                return parentPath
+
+            #Add Successors if not found already
+            S = problem.getSuccessors(node[0])
+            for element in S:
+                if not element[0] in hasExpanded:
+                    g = pathCost + element[2]
+                    f = g + heuristic(element[0], problem)
+                    allSuccessors.push(element, f)
+                    newPath = parentPath.copy()
+                    newPath.append(element[1])
+                    allPaths.push(newPath, f) 
+                    allPathsGCost.push(g, f)
+
+    return  [fail]
 
 
 # Abbreviations
