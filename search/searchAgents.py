@@ -62,8 +62,8 @@ class SearchAgent(Agent):
     algorithm for a supplied search problem, then returns actions to follow that
     path.
 
-    As a default, this agent runs DFS on a PositionSearchProblem to find
-    location (1,1)
+    As a default, this aSearchProblem to find
+    location (1,1)gent runs DFS on a Position
 
     Options for fn include:
       depthFirstSearch or dfs
@@ -288,6 +288,11 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
+        goals = []
+        for element in self.corners:
+            goals.append(element)
+            print(element)
+        self.state = [startingGameState.getPacmanPosition(), goals]
 
     def getStartState(self):
         """
@@ -295,14 +300,20 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return (self.startingPosition[0], self.startingPosition[1], 4)
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        """isGoal = state in self.state[1]
+        if isGoal:
+            self.state[1].remove(state)
+            print("removed: ", state)
+            self.state
+        return len(self.goals) == 0"""
+        return not state[2]
 
     def getSuccessors(self, state):
         """
@@ -325,6 +336,17 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
+            x = state[0]
+            y = state[1]
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            nextCorners = state[2]
+            if (x, y) in self.corners:
+                nextCorners -= 1
+            if not self.walls[nextx][nexty]:
+                nextState = (nextx, nexty, nextCorners)
+                cost = 1
+                successors.append( ( nextState, action, cost) )
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
@@ -360,7 +382,14 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    #import math
+    startPos = state
+    shortestDist = math.inf
+    for element in problem.goals:
+        goalPos = abs(startPos[0] - element[0]) + abs(startPos[1] - element[1])
+        if goalPos < shortestDist:
+            shortestDist = goalPos
+    return shortestDist
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
