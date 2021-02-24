@@ -288,11 +288,6 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
-        goals = []
-        for element in self.corners:
-            goals.append(element)
-            print(element)
-        self.state = [startingGameState.getPacmanPosition(), goals]
 
     def getStartState(self):
         """
@@ -300,20 +295,16 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        return (self.startingPosition[0], self.startingPosition[1], 4)
+        #Keeping track is path is through corners by having each state have an array of bools that correspond to each corner.
+        return (self.startingPosition[0], self.startingPosition[1], [False, False, False, False])
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        """isGoal = state in self.state[1]
-        if isGoal:
-            self.state[1].remove(state)
-            print("removed: ", state)
-            self.state
-        return len(self.goals) == 0"""
-        return not state[2]
+        #If all corners are touch (true)
+        return not (False in state[2])
 
     def getSuccessors(self, state):
         """
@@ -325,7 +316,6 @@ class CornersProblem(search.SearchProblem):
             state, 'action' is the action required to get there, and 'stepCost'
             is the incremental cost of expanding to that successor
         """
-
         successors = []
         for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
             # Add a successor state to the successor list if the action is legal
@@ -340,10 +330,13 @@ class CornersProblem(search.SearchProblem):
             y = state[1]
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
-            nextCorners = state[2]
-            if (x, y) in self.corners:
-                nextCorners -= 1
             if not self.walls[nextx][nexty]:
+                #Check if next node is a corner, if so update the state with True correspondingly
+                nextCorners = state[2].copy()
+                for n in range(len(self.corners)):
+                    if (nextx, nexty) == self.corners[n]:
+                        nextCorners[n] = True
+                #Create new state        
                 nextState = (nextx, nexty, nextCorners)
                 cost = 1
                 successors.append( ( nextState, action, cost) )
