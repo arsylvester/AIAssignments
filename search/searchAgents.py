@@ -375,13 +375,19 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    #import math
+    import math
     startPos = state
     shortestDist = math.inf
-    for element in problem.goals:
-        goalPos = abs(startPos[0] - element[0]) + abs(startPos[1] - element[1])
-        if goalPos < shortestDist:
-            shortestDist = goalPos
+    #Check if goal state
+    if not False in state[2]:
+        return 0
+    #Loops to find an unvisited corner before calculating manhattan distance of closest unvisited corner.
+    for i in range(len(problem.corners)):
+        if not state[2][i]:
+            #goalPos = abs(startPos[0] - problem.corners[i][0]) + abs(startPos[1] - problem.corners[i][1])
+            goalPos = ( (startPos[0] - problem.corners[i][0]) ** 2 + (startPos[1] - problem.corners[i][1]) ** 2 ) ** 0.5
+            if goalPos < shortestDist:
+                shortestDist = goalPos
     return shortestDist
 
 class AStarCornersAgent(SearchAgent):
