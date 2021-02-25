@@ -384,8 +384,9 @@ def cornersHeuristic(state, problem):
     #Loops to find an unvisited corner before calculating manhattan distance of closest unvisited corner.
     for i in range(len(problem.corners)):
         if not state[2][i]:
-            #goalPos = abs(startPos[0] - problem.corners[i][0]) + abs(startPos[1] - problem.corners[i][1])
-            goalPos = ( (startPos[0] - problem.corners[i][0]) ** 2 + (startPos[1] - problem.corners[i][1]) ** 2 ) ** 0.5
+            goalPos = abs(startPos[0] - problem.corners[i][0]) + abs(startPos[1] - problem.corners[i][1])
+            #goalPos = ( (startPos[0] - problem.corners[i][0]) ** 2 + (startPos[1] - problem.corners[i][1]) ** 2 ) ** 0.5
+            return goalPos
             if goalPos < shortestDist:
                 shortestDist = goalPos
     return shortestDist
@@ -482,7 +483,21 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    import math
+    startPos = state[0]
+    shortestDist = math.inf
+    #Check if goal state
+    if problem.isGoalState(state):
+        return 0
+    #Loops to find an unvisited corner before calculating manhattan distance of closest unvisited corner.
+    foodList = state[1].asList().copy()
+    for food in foodList:
+        goalPos = abs(startPos[0] - food[0]) + abs(startPos[1] - food[1])
+        #goalPos = ( (startPos[0] - food[0]) ** 2 + (startPos[1] - food[1]) ** 2 ) ** 0.5
+        return goalPos
+        if goalPos < shortestDist:
+            shortestDist = goalPos
+    return shortestDist
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
