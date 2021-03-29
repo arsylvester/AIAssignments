@@ -4,19 +4,31 @@
 
 import sys
 import os.path
+import re
 
 #Global vars
-domain = {
-    'X': [0, 1, 2],
-    'Y': [0, 1, 2],
-    'Z': [0, 1, 2]
-}
+domain = {}
 constraints = [('Y', '=', 'Z'), ('X', '<', 'Y')]
 chosenVars = []
 varFile = None
 conFile = None
 
 #Functions
+def assignDomain():
+    global varFile
+    if not varFile == None:
+        line = re.split("[ :\n]", varFile.readline())
+        emptyCount = line.count('')
+        for i in range(emptyCount):
+            line.remove('')
+        variable = line[0]
+        line.remove(line[0])
+
+        numbers = []
+        for num in line:
+            numbers.append(int(num))
+        domain.update({variable : numbers})
+
 def backtrack():
     print(mostConstrained())
 
@@ -57,6 +69,33 @@ def mostConstraining(valList):
 def alphabetical(valLists):
     return "Var"
 
+#Attempt to open files, return true if successful
+def openFiles():
+    #Check if the given .var file exists
+    if(os.path.isfile(sys.argv[1])):
+        global varFile
+        varFile = open(sys.argv[1], "r")
+    else:
+        print('.var file does not exist.')
+        return False
+
+    #Check if the given .con file exists
+    if(os.path.isfile(sys.argv[2])):
+        global conFile
+        confile = open(sys.argv[2], "r")
+    else:
+        print('.con file does not exist.')
+        return False
+    #The files were successfully opened
+    return True
+
+def closeFiles():
+    #Close files as needed
+    if(not varFile == None):
+        varFile.close()
+    if(not conFile == None):
+        conFile.close()
+
 #Include logic for reading command line, files, and main processes here.
 #Check for exact number of command line arguments
 if not len(sys.argv) == 4:
@@ -73,18 +112,9 @@ if not sys.argv[2].find(".con") == len(sys.argv[2]) - 4:
     print('.con file not found in argument 2.')
     exit()
 
-#Check if the given .var file exists
-if(os.path.isfile(sys.argv[1])):
-    varFile = open(sys.argv[1], "r")
+if openFiles():
+    assignDomain()
 else:
-    print('.var file does not exist.')
-    exit()
-
-#Check if the given .con file exists
-if(os.path.isfile(sys.argv[2])):
-    conFile = open(sys.argv[2], "r")
-else:
-    print('.con file does not exist.')
     exit()
 
 #Check if we were given a valid consistency-enforcing procedure
@@ -94,15 +124,7 @@ elif sys.argv[3] == "fc":
     forwardCheck()
 else:
     print('Invalid consistency-enforcing procedure.')
-    #Close files as needed
-    if(not varFile == None):
-        varFile.close()
-    if(not conFile == None):
-        conFile.close()
+    closeFiles()
     exit()
 
-#Close files as needed
-if(not varFile == None):
-    varFile.close()
-if(not conFile == None):
-    conFile.close()
+closeFiles()
