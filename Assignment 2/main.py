@@ -9,9 +9,9 @@ import os.path
 domain = {
     'X': [0, 1, 2],
     'Y': [0, 1, 2],
-    'Z': [1, 2]
+    'Z': [0, 1, 2]
 }
-constraints = [('X', '=', 'Z'), ('X', '<', 'Y')]
+constraints = [('Y', '=', 'Z'), ('X', '<', 'Y')]
 chosenVars = []
 varFile = None
 conFile = None
@@ -40,8 +40,20 @@ def mostConstrained():
         return mostConstraining(mostConList)
 
 def mostConstraining(valList):
-    return "Var"
+    mostConst = 0
+    mostConstVar = ""
+    for val in valList:
+        numOfConstraints = 0
+        for constraint in constraints:
+            if (val == constraint[0] or val == constraint[2]) and (constraint[0] not in chosenVars and constraint[2] not in chosenVars):
+                numOfConstraints += 1
+        if numOfConstraints > mostConst:
+            mostConstVar = val
+            mostConst = numOfConstraints
+    #This will be alphabetical even on a tie since the input will always be provided alphabetical.
+    return mostConstVar
 
+#Not Needed
 def alphabetical(valLists):
     return "Var"
 
