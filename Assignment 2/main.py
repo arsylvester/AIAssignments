@@ -7,8 +7,8 @@ import os.path
 import re
 
 #Global vars
-domain = {}
-constraints = [('Y', '=', 'Z'), ('X', '<', 'Y')]
+domains = {}
+constraints = []
 chosenVars = []
 varFile = None
 conFile = None
@@ -16,8 +16,10 @@ conFile = None
 #Functions
 def assignDomain():
     global varFile
-    global domain
+    global domains
+    #Check if the var file is open
     if not varFile == None:
+        #Read in each line of data to an array and remove unnecessary characters
         nextLine = varFile.readline()
         while(not nextLine == ""):
             line = re.split("[ :\n]", nextLine)
@@ -27,14 +29,29 @@ def assignDomain():
             variable = line[0]
             line.remove(line[0])
 
+            #Convert domains to integers and update the domains dictionary
             numbers = []
             for num in line:
                 numbers.append(int(num))
-            domain.update({variable : numbers})
+            domains.update({variable : numbers})
             nextLine = varFile.readline()
 
 def assignConstraints():
+    global conFile
     global constraints
+    #Check if the con file is open
+    if not conFile == None:
+        #Read in each line of data to an array and remove unnecessary characters
+        nextLine = conFile.readline()
+        while(not nextLine == ""):
+            line = re.split("[ :\n]", nextLine)
+            emptyCount = line.count('')
+            for i in range(emptyCount):
+                line.remove('')
+
+            #Convert each constraint to a tuple and update the array of constraints
+            constraints.append(tuple(line))
+            nextLine = conFile.readline()
 
 def backtrack():
     print(mostConstrained())
@@ -46,11 +63,11 @@ def mostConstrained():
     mostConList = []
     smallestDomain = 99
     #Find smallest domains
-    for var in domain:
-        if len(domain[var]) < smallestDomain:
+    for var in domains:
+        if len(domains[var]) < smallestDomain:
             mostConList = [var]
-            smallestDomain = len(domain[var])
-        elif len(domain[var]) == smallestDomain:
+            smallestDomain = len(domains[var])
+        elif len(domains[var]) == smallestDomain:
             mostConList.append(var)
     #Check if only one value, otherwise use most constraining
     if len(mostConList) == 1:
@@ -89,7 +106,7 @@ def openFiles():
     #Check if the given .con file exists
     if(os.path.isfile(sys.argv[2])):
         global conFile
-        confile = open(sys.argv[2], "r")
+        conFile = open(sys.argv[2], "r")
     else:
         print('.con file does not exist.')
         return False
@@ -121,6 +138,7 @@ if not sys.argv[2].find(".con") == len(sys.argv[2]) - 4:
 
 if openFiles():
     assignDomain()
+    assignConstraints()
 else:
     exit()
 
