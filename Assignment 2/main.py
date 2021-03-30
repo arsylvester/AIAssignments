@@ -73,6 +73,7 @@ def backtrackHelper(workingDomains, workingConstraints):
         for currTuple in constraints:
             if MCVar in currTuple:
                 if currTuple[0] in chosenVars or currTuple[2] in chosenVars: #we haven't put MCVar in chosenVars yet, so we can check both indexes of the tuple at once
+                    'empty'
         chosenVars.append(assignment)
         workingDomains.pop(MCVar)
         #workingConstraints.pop()  #how to actually make sure we're removing the correct element here?
@@ -123,29 +124,36 @@ def alphabetical(valLists):
 def leastConstrainingValue(var, domainsToCheck):
     possibleValues = {}
     varsAffected = []
+    #Find variables that are constrained with var
     for constraint in constraints:
         if constraint[0] == var:
-            if constraint[2] not in varsAffected:
+            if constraint[2] not in varsAffected and constraint[2] not in chosenVars:
                 varsAffected.append(constraint[2])
         elif constraint[2] == var:
-            if constraint[0] not in varsAffected:
+            if constraint[0] not in varsAffected and constraint[0] not in chosenVars:
                 varsAffected.append(constraint[0])
-    for affectedVar in varsAffected:
-        amountAffected = []
-        for value in domainsToCheck[var]:
-            numTrue = 0
-            for constraint in constraints:
-                if affectedVar == constraint[0] and var == constraint[2]:
-                    if(compareConstraint(constraint[1], affectedVar, var)):
-                        numTrue += 1
-                elif affectedVar == constraint[2] and var == constraint[0]:
-                    if(compareConstraint(constraint[1], var, affectedVar)):
-                        numTrue += 1
-            amountAffected.append(numTrue)
-        possibleValues[affectedVar] = amountAffected
-
-    print(possibleValues)
-    return 1
+    #For each value in the domain of var compare it with the constraints and tally the total domain lengths for all affects variables.
+    totalAmountAffected = []
+    for value in domainsToCheck[var]:
+        numTrue = 0
+        for affectedVar in varsAffected:
+            for affectedValue in domainsToCheck[affectedVar]:
+                for constraint in constraints:
+                    if affectedVar == constraint[0] and var == constraint[2]:
+                        if(compareConstraint(constraint[1], affectedValue, value)):
+                            numTrue += 1
+                    elif affectedVar == constraint[2] and var == constraint[0]:
+                        if(compareConstraint(constraint[1], value, affectedValue)):
+                            numTrue += 1
+        totalAmountAffected.append(numTrue)
+    #Find the largest total (least constraining value)
+    largestTotal = totalAmountAffected[0]
+    lsv = 0
+    for i in range(len(totalAmountAffected)):
+        if totalAmountAffected[i] > largestTotal:
+            largestTotal = totalAmountAffected[i]
+            lsv = i
+    return domainsToCheck[var][lsv]
 
 def compareConstraint(operator, val1, val2):
     if operator == '<':
