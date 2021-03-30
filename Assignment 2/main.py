@@ -56,16 +56,18 @@ def assignConstraints():
 def backtrack():
     global domains
     global constraints
-    backtrackHelper(domains, constraints)
+    print(backtrackHelper(domains, constraints))
 
 def backtrackHelper(workingDomains, workingConstraints):
+    if len(workingDomains) == 0: #We successfully assigned all variables then
+        return True
     domIndex = 0    #Domain index representing the current entry in the list of values possibl;e for a variable's domain
-    MCVar = mostConstrained()
+    MCVar = mostConstrained(workingDomains)
     while True:
         print('Length of remaining domains for the variable \'', MCVar, '\': ', len(workingDomains[MCVar]))
         print('Remaining domains for the variable \'', MCVar, '\': ', workingDomains[MCVar])
         if not len(workingDomains[MCVar]) == 0: #this line wasn't in the pseudocode, I just wanted to make sure there's actually a value to assign to the variable in the tuple
-            assignment = (MCVar, workingDomains[MCVar][0])
+            assignment = (MCVar, workingDomains[MCVar][domIndex])
             print('Assignment tuple: ', assignment)
         else:
             return False #is this right??
@@ -73,29 +75,31 @@ def backtrackHelper(workingDomains, workingConstraints):
         for currTuple in constraints:
             if MCVar in currTuple:
                 if currTuple[0] in chosenVars or currTuple[2] in chosenVars: #we haven't put MCVar in chosenVars yet, so we can check both indexes of the tuple at once
-                    'empty'
-        chosenVars.append(assignment)
-        workingDomains.pop(MCVar)
+                    print('Failure') #NOT DONE
+        chosenVars.append(assignment) #Probably need to make this a variable passed on each recursion
+        #Make a copy of domains without the current var to pass on
+        newDomains = workingDomains.copy()
+        newDomains.pop(MCVar)
         #workingConstraints.pop()  #how to actually make sure we're removing the correct element here?
         domIndex = domIndex + 1
         if domIndex >= len(workingDomains[MCVar]):
             return False
-        if not backtrackHelper(workingDomains, workingConstraints):
+        if not backtrackHelper(newDomains, workingConstraints):
             break
     return True #is this right?? how do we actually know if the backtrack returned successfully??
 
 def forwardCheck():
-    print(leastConstrainingValue('A', domains))
+    print(leastConstrainingValue('D', domains))
 
-def mostConstrained():
+def mostConstrained(workingDomains):
     mostConList = []
     smallestDomain = 99
     #Find smallest domains
-    for var in domains:
-        if len(domains[var]) < smallestDomain:
+    for var in workingDomains:
+        if len(workingDomains[var]) < smallestDomain:
             mostConList = [var]
-            smallestDomain = len(domains[var])
-        elif len(domains[var]) == smallestDomain:
+            smallestDomain = len(workingDomains[var])
+        elif len(workingDomains[var]) == smallestDomain:
             mostConList.append(var)
     #Check if only one value, otherwise use most constraining
     if len(mostConList) == 1:
