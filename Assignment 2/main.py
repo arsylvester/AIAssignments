@@ -16,18 +16,25 @@ conFile = None
 #Functions
 def assignDomain():
     global varFile
+    global domain
     if not varFile == None:
-        line = re.split("[ :\n]", varFile.readline())
-        emptyCount = line.count('')
-        for i in range(emptyCount):
-            line.remove('')
-        variable = line[0]
-        line.remove(line[0])
+        nextLine = varFile.readline()
+        while(not nextLine == ""):
+            line = re.split("[ :\n]", nextLine)
+            emptyCount = line.count('')
+            for i in range(emptyCount):
+                line.remove('')
+            variable = line[0]
+            line.remove(line[0])
 
-        numbers = []
-        for num in line:
-            numbers.append(int(num))
-        domain.update({variable : numbers})
+            numbers = []
+            for num in line:
+                numbers.append(int(num))
+            domain.update({variable : numbers})
+            nextLine = varFile.readline()
+
+def assignConstraints():
+    global constraints
 
 def backtrack():
     print(mostConstrained())
