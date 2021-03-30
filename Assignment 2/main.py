@@ -57,7 +57,7 @@ def backtrack():
     print(mostConstrained())
 
 def forwardCheck():
-    print("ForwardChecking")
+    print(leastConstrainingValue('A', domains))
 
 def mostConstrained():
     mostConList = []
@@ -92,6 +92,43 @@ def mostConstraining(valList):
 #Not Needed
 def alphabetical(valLists):
     return "Var"
+
+def leastConstrainingValue(var, domainsToCheck):
+    possibleValues = {}
+    varsAffected = []
+    for constraint in constraints:
+        if constraint[0] == var:
+            if constraint[2] not in varsAffected:
+                varsAffected.append(constraint[2])
+        elif constraint[2] == var:
+            if constraint[0] not in varsAffected:
+                varsAffected.append(constraint[0])
+    for affectedVar in varsAffected:
+        amountAffected = []
+        for value in domainsToCheck[var]:
+            numTrue = 0
+            for constraint in constraints:
+                if affectedVar == constraint[0] and var == constraint[2]:
+                    if(compareConstraint(constraint[1], affectedVar, var)):
+                        numTrue += 1
+                elif affectedVar == constraint[2] and var == constraint[0]:
+                    if(compareConstraint(constraint[1], var, affectedVar)):
+                        numTrue += 1
+            amountAffected.append(numTrue)
+        possibleValues[affectedVar] = amountAffected
+
+    print(possibleValues)
+    return 1
+
+def compareConstraint(operator, val1, val2):
+    if operator == '<':
+        return val1 < val2
+    elif operator == '>':
+        return val1 > val2
+    elif operator == '=':
+        return val1 == val2
+    elif operator == '!':
+        return not(val1 == val2)
 
 #Attempt to open files, return true if successful
 def openFiles():
