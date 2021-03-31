@@ -56,10 +56,9 @@ def assignConstraints():
 
 def backtrack():
     global domains
-    global constraints
-    backtrackHelper(domains, constraints, [])
+    backtrackHelper(domains, [])
 
-def backtrackHelper(workingDomains, workingConstraints, chosenVars):
+def backtrackHelper(workingDomains, chosenVars):
     if len(workingDomains) == len(chosenVars): #We successfully assigned all variables then (Base case)
         printBranch(chosenVars, 'solution')
         return True
@@ -116,12 +115,89 @@ def backtrackHelper(workingDomains, workingConstraints, chosenVars):
         newDomains[MCVar] = [assignment[1]]
 
         #Recursively call backtrack
-        if backtrackHelper(newDomains, workingConstraints, newChosenVars):
+        if backtrackHelper(newDomains, newChosenVars):
             return True
     return False 
 
 def forwardCheck():
-    print(leastConstrainingValue('D', domains))
+    global domains
+    forwardCheckHelper(domains, [])
+
+def forwardCheckHelper(workingDomains, chosenVars):
+    if len(workingDomains) == len(chosenVars): #We successfully assigned all variables then (Base case)
+        printBranch(chosenVars, 'solution')
+        return True
+
+    #Need a simple version for mostConstrained and leastConstrainingValue
+    simpleChosenVars = []
+    for touple in chosenVars:
+        simpleChosenVars.append(touple[0])
+    MCVar = mostConstrained(workingDomains, simpleChosenVars)
+
+    #Python and Dictionaries are weird, so have to do this so that we don't overwrite information higher in the recursion tree.
+    currVarDomain = workingDomains[MCVar].copy()
+    workingDomains[MCVar] = currVarDomain
+    currentDomainsCopy = workingDomains.copy()
+
+    #loop till all values in the domain have been tried
+    while len(currVarDomain) >= 1:
+        #Find leastConstraingValue
+        currentValue = leastConstrainingValue(MCVar, workingDomains, simpleChosenVars)
+        currVarDomain.remove(currentValue)
+        failed = False
+        assignment = (MCVar, currentValue)
+        workingDomains = currentDomainsCopy.copy()
+
+
+        #Loop through contraints, if a constraint is affected by a var check it with already assigned variables to see if it fails.
+        for currConstraint in constraints:
+            constraintWorked = True
+            if MCVar in currConstraint:
+                if currConstraint[0] == MCVar:
+                    otherVarDomain = workingDomains[currConstraint[2]].copy()
+                    workingDomains[currConstraint[2]] = otherVarDomain
+                    constraintWorked = False
+                    valuesToRemove = []
+                    for val in workingDomains[currConstraint[2]]:
+                        if compareConstraint(currConstraint[1], currentValue, val):
+                            constraintWorked = True
+                        else:
+                            valuesToRemove.append(val)
+                    for valToRemove in valuesToRemove:
+                        otherVarDomain.remove(valToRemove)
+                elif currConstraint[2] == MCVar:
+                    otherVarDomain = workingDomains[currConstraint[0]].copy()
+                    workingDomains[currConstraint[0]] = otherVarDomain
+                    constraintWorked = False
+                    valuesToRemove = []
+                    for val in workingDomains[currConstraint[0]]:
+                        if compareConstraint(currConstraint[1], val, currentValue):
+                            constraintWorked = True
+                        else:
+                            valuesToRemove.append(val)
+                    for valToRemove in valuesToRemove:
+                        otherVarDomain.remove(valToRemove)
+            if not constraintWorked:
+                failed = True
+                break
+        
+        #Copy chosenVars with our current var appended to it to pass on
+        newChosenVars = chosenVars.copy() 
+        newChosenVars.append(assignment)
+        #Failed, try next index
+        if failed:
+            printBranch(newChosenVars, 'failure')
+            continue
+
+        #Make a copy of domains without the current var to pass on
+        newDomains = workingDomains.copy()
+        newDomains[MCVar] = [assignment[1]]
+
+        #Recursively call backtrack
+        if forwardCheckHelper(newDomains, newChosenVars):
+            return True
+    return False 
+
 
 def mostConstrained(workingDomains, chosenVars):
     mostConList = []
@@ -188,12 +264,12 @@ def leastConstrainingValue(var, domainsToCheck, chosenVars):
     #print(totalAmountAffected)
     #Find the largest total (least constraining value)
     largestTotal = totalAmountAffected[0]
-    lsv = 0
+    lcv = 0
     for i in range(len(totalAmountAffected)):
         if totalAmountAffected[i] > largestTotal:
             largestTotal = totalAmountAffected[i]
-            lsv = i
-    return domainsToCheck[var][lsv]
+            lcv = i
+    return domainsToCheck[var][lcv]
 
 def printBranch(chosenVars, endOfString):
     global branchNumber
