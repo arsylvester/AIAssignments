@@ -9,9 +9,10 @@ import re
 #Global vars
 domains = {}        #Dictionary of variables, and their associated domain of values
 constraints = []    #Array of tuples containing each constraint between variables
-chosenVars = []     #Array of tuples keeping track of the order of assigned variables, and their current associated value
+#chosenVars = []     #Array of tuples keeping track of the order of assigned variables, and their current associated value
 varFile = None      #The .var input file
 conFile = None      #The .con input file
+branchNumber = 1
 
 #Functions
 def assignDomain():
@@ -56,46 +57,75 @@ def assignConstraints():
 def backtrack():
     global domains
     global constraints
-    print(backtrackHelper(domains, constraints))
+    backtrackHelper(domains, constraints, [])
 
-def backtrackHelper(workingDomains, workingConstraints):
-    if len(workingDomains) == 0: #We successfully assigned all variables then
+def backtrackHelper(workingDomains, workingConstraints, chosenVars):
+    if len(workingDomains) == len(chosenVars): #We successfully assigned all variables then
+        printBranch(chosenVars, 'solution')
         return True
     domIndex = 0    #Domain index representing the current entry in the list of values possibl;e for a variable's domain
-    MCVar = mostConstrained(workingDomains)
-    while True:
-        print('Length of remaining domains for the variable \'', MCVar, '\': ', len(workingDomains[MCVar]))
-        print('Remaining domains for the variable \'', MCVar, '\': ', workingDomains[MCVar])
+    #print('Chosen Vars so far: ', chosenVars)
+    simpleChosenVars = []
+    for touple in chosenVars:
+        simpleChosenVars.append(touple[0])
+    MCVar = mostConstrained(workingDomains, simpleChosenVars)
+    #print('Variable chosen: ',MCVar)
+    #print('Length of remaining domains for the variable \'', MCVar, '\': ', len(workingDomains[MCVar]))
+    #print('Remaining domains for the variable \'', MCVar, '\': ', workingDomains[MCVar])
+    while domIndex < len(workingDomains[MCVar]):
+        failed = False
         if not len(workingDomains[MCVar]) == 0: #this line wasn't in the pseudocode, I just wanted to make sure there's actually a value to assign to the variable in the tuple
             assignment = (MCVar, workingDomains[MCVar][domIndex])
-            print('Assignment tuple: ', assignment)
+           # print('Assignment tuple: ', assignment)
         else:
             return False #is this right??
 
-        for currTuple in constraints:
-            if MCVar in currTuple:
-                if currTuple[0] in chosenVars or currTuple[2] in chosenVars: #we haven't put MCVar in chosenVars yet, so we can check both indexes of the tuple at once
-                    print('Failure') #NOT DONE
-        chosenVars.append(assignment) #Probably need to make this a variable passed on each recursion
+        for currConstraint in constraints:
+            constraintWorked = True
+            if MCVar in currConstraint:
+                constraintWorked = False
+                if currConstraint[0] == MCVar: #we haven't put MCVar in chosenVars yet, so we can check both indexes of the tuple at once
+                    for val in workingDomains[currConstraint[2]]:
+                        if compareConstraint(currConstraint[1], workingDomains[MCVar][domIndex], val):
+                            constraintWorked = True
+                            break
+                elif currConstraint[2] == MCVar:
+                    for val in workingDomains[currConstraint[0]]:
+                        if compareConstraint(currConstraint[1], val, workingDomains[MCVar][domIndex]):
+                            constraintWorked = True
+                            break
+            if not constraintWorked:
+                #print(currConstraint," did not work")
+                failed = True
+                break
+
+        domIndex = domIndex + 1
+        newChosenVars = chosenVars.copy() #Probably need to make this a variable passed on each recursion
+        newChosenVars.append(assignment)
+                #Failed, try next index
+        if failed:
+            printBranch(newChosenVars, 'failure')
+            continue
         #Make a copy of domains without the current var to pass on
         newDomains = workingDomains.copy()
-        newDomains.pop(MCVar)
+        newDomains[MCVar] = [assignment[1]]
+        #newDomains.pop(MCVar) don't pop full variable, just want to reduce list
         #workingConstraints.pop()  #how to actually make sure we're removing the correct element here?
-        domIndex = domIndex + 1
-        if domIndex >= len(workingDomains[MCVar]):
-            return False
-        if not backtrackHelper(newDomains, workingConstraints):
-            break
-    return True #is this right?? how do we actually know if the backtrack returned successfully??
+        #
+        if backtrackHelper(newDomains, workingConstraints, newChosenVars):
+            return True
+    return False #is this right?? how do we actually know if the backtrack returned successfully??
 
 def forwardCheck():
     print(leastConstrainingValue('D', domains))
 
-def mostConstrained(workingDomains):
+def mostConstrained(workingDomains, chosenVars):
     mostConList = []
     smallestDomain = 99
     #Find smallest domains
     for var in workingDomains:
+        if var in chosenVars:
+            continue
         if len(workingDomains[var]) < smallestDomain:
             mostConList = [var]
             smallestDomain = len(workingDomains[var])
@@ -105,11 +135,11 @@ def mostConstrained(workingDomains):
     if len(mostConList) == 1:
         return mostConList[0]
     else:
-        return mostConstraining(mostConList)
+        return mostConstraining(mostConList, chosenVars)
 
-def mostConstraining(valList):
+def mostConstraining(valList, chosenVars): #Error here
     mostConst = 0
-    mostConstVar = ""
+    mostConstVar = valList[0]
     for val in valList:
         numOfConstraints = 0
         for constraint in constraints:
@@ -125,7 +155,7 @@ def mostConstraining(valList):
 def alphabetical(valLists):
     return "Var"
 
-def leastConstrainingValue(var, domainsToCheck):
+def leastConstrainingValue(var, domainsToCheck, chosenVars):
     possibleValues = {}
     varsAffected = []
     #Find variables that are constrained with var
@@ -158,6 +188,18 @@ def leastConstrainingValue(var, domainsToCheck):
             largestTotal = totalAmountAffected[i]
             lsv = i
     return domainsToCheck[var][lsv]
+
+def printBranch(chosenVars, endOfString):
+    global branchNumber
+    line = "" + str(branchNumber) + ". "
+    branchNumber += 1
+    for i in range(len(chosenVars)):
+        if i < len(chosenVars) - 1:
+            line = line + chosenVars[i][0] + "=" + str(chosenVars[i][1]) + ", "
+        else:
+            line = line + chosenVars[i][0] + "=" + str(chosenVars[i][1])
+    print(line," ",endOfString)
+
 
 def compareConstraint(operator, val1, val2):
     if operator == '<':
