@@ -69,29 +69,31 @@ def backtrackHelper(workingDomains, workingConstraints, chosenVars):
     for touple in chosenVars:
         simpleChosenVars.append(touple[0])
     MCVar = mostConstrained(workingDomains, simpleChosenVars)
-    #print('Variable chosen: ',MCVar)
+    #print('========')
     #print('Length of remaining domains for the variable \'', MCVar, '\': ', len(workingDomains[MCVar]))
     #print('Remaining domains for the variable \'', MCVar, '\': ', workingDomains[MCVar])
-    while len(workingDomains[MCVar]) > 1:
+    currVarDomain = workingDomains[MCVar].copy()
+    workingDomains[MCVar] = currVarDomain
+    while len(currVarDomain) >= 1:
         currentValue = leastConstrainingValue(MCVar, workingDomains, simpleChosenVars)
-        workingDomains[MCVar].remove(currentValue)
+        #print('Variable chosen: ',MCVar)
+        #print('Current Value: ',currentValue)
+        currVarDomain.remove(currentValue)
+        #print('Working  Domain',workingDomains)
         failed = False
-        if not len(workingDomains[MCVar]) == 0: #this line wasn't in the pseudocode, I just wanted to make sure there's actually a value to assign to the variable in the tuple
-            assignment = (MCVar, currentValue)
-           # print('Assignment tuple: ', assignment)
-        else:
-            return False #is this right??
+        assignment = (MCVar, currentValue)
 
         for currConstraint in constraints:
             constraintWorked = True
             if MCVar in currConstraint:
-                constraintWorked = False
-                if currConstraint[0] == MCVar: #we haven't put MCVar in chosenVars yet, so we can check both indexes of the tuple at once
+                if currConstraint[0] == MCVar and currConstraint[2] in simpleChosenVars: 
+                    constraintWorked = False
                     for val in workingDomains[currConstraint[2]]:
                         if compareConstraint(currConstraint[1], currentValue, val):
                             constraintWorked = True
                             break
-                elif currConstraint[2] == MCVar:
+                elif currConstraint[2] == MCVar and currConstraint[0] in simpleChosenVars:
+                    constraintWorked = False
                     for val in workingDomains[currConstraint[0]]:
                         if compareConstraint(currConstraint[1], val, currentValue):
                             constraintWorked = True
@@ -107,13 +109,13 @@ def backtrackHelper(workingDomains, workingConstraints, chosenVars):
                 #Failed, try next index
         if failed:
             printBranch(newChosenVars, 'failure')
+            #print('========')
             continue
         #Make a copy of domains without the current var to pass on
         newDomains = workingDomains.copy()
         newDomains[MCVar] = [assignment[1]]
         #newDomains.pop(MCVar) don't pop full variable, just want to reduce list
         #workingConstraints.pop()  #how to actually make sure we're removing the correct element here?
-        #
         if backtrackHelper(newDomains, workingConstraints, newChosenVars):
             return True
     return False #is this right?? how do we actually know if the backtrack returned successfully??
