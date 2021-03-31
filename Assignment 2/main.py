@@ -231,10 +231,6 @@ def mostConstraining(valList, chosenVars): #Error here
     #This will be alphabetical even on a tie since the input will always be provided alphabetical.
     return mostConstVar
 
-#Not Needed
-def alphabetical(valLists):
-    return "Var"
-
 def leastConstrainingValue(var, domainsToCheck, chosenVars):
     possibleValues = {}
     varsAffected = []
@@ -246,7 +242,6 @@ def leastConstrainingValue(var, domainsToCheck, chosenVars):
         elif constraint[2] == var:
             if constraint[0] not in varsAffected and constraint[0] not in chosenVars:
                 varsAffected.append(constraint[0])
-    #print(varsAffected)
     #For each value in the domain of var compare it with the constraints and tally the total domain lengths for all affects variables.
     totalAmountAffected = []
     for value in domainsToCheck[var]:
@@ -261,7 +256,6 @@ def leastConstrainingValue(var, domainsToCheck, chosenVars):
                         if(compareConstraint(constraint[1], value, affectedValue)):
                             numTrue += 1
         totalAmountAffected.append(numTrue)
-    #print(totalAmountAffected)
     #Find the largest total (least constraining value)
     largestTotal = totalAmountAffected[0]
     lcv = 0
@@ -280,7 +274,7 @@ def printBranch(chosenVars, endOfString):
             line = line + chosenVars[i][0] + "=" + str(chosenVars[i][1]) + ", "
         else:
             line = line + chosenVars[i][0] + "=" + str(chosenVars[i][1])
-    print(line," ",endOfString)
+    print(line,"",endOfString)
 
 
 def compareConstraint(operator, val1, val2):

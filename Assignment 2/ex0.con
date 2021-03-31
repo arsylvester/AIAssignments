@@ -1,3 +1,6 @@
-A = B
-B = C
-C > D
+A > F
+F > E
+F = D
+B > A
+A = C
+B > D
