@@ -63,7 +63,7 @@ def backtrackHelper(workingDomains, workingConstraints, chosenVars):
     if len(workingDomains) == len(chosenVars): #We successfully assigned all variables then
         printBranch(chosenVars, 'solution')
         return True
-    domIndex = 0    #Domain index representing the current entry in the list of values possibl;e for a variable's domain
+    #domIndex = 0    #Domain index representing the current entry in the list of values possibl;e for a variable's domain
     #print('Chosen Vars so far: ', chosenVars)
     simpleChosenVars = []
     for touple in chosenVars:
@@ -72,10 +72,12 @@ def backtrackHelper(workingDomains, workingConstraints, chosenVars):
     #print('Variable chosen: ',MCVar)
     #print('Length of remaining domains for the variable \'', MCVar, '\': ', len(workingDomains[MCVar]))
     #print('Remaining domains for the variable \'', MCVar, '\': ', workingDomains[MCVar])
-    while domIndex < len(workingDomains[MCVar]):
+    while len(workingDomains[MCVar]) > 1:
+        currentValue = leastConstrainingValue(MCVar, workingDomains, simpleChosenVars)
+        workingDomains[MCVar].remove(currentValue)
         failed = False
         if not len(workingDomains[MCVar]) == 0: #this line wasn't in the pseudocode, I just wanted to make sure there's actually a value to assign to the variable in the tuple
-            assignment = (MCVar, workingDomains[MCVar][domIndex])
+            assignment = (MCVar, currentValue)
            # print('Assignment tuple: ', assignment)
         else:
             return False #is this right??
@@ -86,12 +88,12 @@ def backtrackHelper(workingDomains, workingConstraints, chosenVars):
                 constraintWorked = False
                 if currConstraint[0] == MCVar: #we haven't put MCVar in chosenVars yet, so we can check both indexes of the tuple at once
                     for val in workingDomains[currConstraint[2]]:
-                        if compareConstraint(currConstraint[1], workingDomains[MCVar][domIndex], val):
+                        if compareConstraint(currConstraint[1], currentValue, val):
                             constraintWorked = True
                             break
                 elif currConstraint[2] == MCVar:
                     for val in workingDomains[currConstraint[0]]:
-                        if compareConstraint(currConstraint[1], val, workingDomains[MCVar][domIndex]):
+                        if compareConstraint(currConstraint[1], val, currentValue):
                             constraintWorked = True
                             break
             if not constraintWorked:
@@ -99,7 +101,7 @@ def backtrackHelper(workingDomains, workingConstraints, chosenVars):
                 failed = True
                 break
 
-        domIndex = domIndex + 1
+        #domIndex = domIndex + 1
         newChosenVars = chosenVars.copy() #Probably need to make this a variable passed on each recursion
         newChosenVars.append(assignment)
                 #Failed, try next index
@@ -166,6 +168,7 @@ def leastConstrainingValue(var, domainsToCheck, chosenVars):
         elif constraint[2] == var:
             if constraint[0] not in varsAffected and constraint[0] not in chosenVars:
                 varsAffected.append(constraint[0])
+    #print(varsAffected)
     #For each value in the domain of var compare it with the constraints and tally the total domain lengths for all affects variables.
     totalAmountAffected = []
     for value in domainsToCheck[var]:
@@ -180,6 +183,7 @@ def leastConstrainingValue(var, domainsToCheck, chosenVars):
                         if(compareConstraint(constraint[1], value, affectedValue)):
                             numTrue += 1
         totalAmountAffected.append(numTrue)
+    #print(totalAmountAffected)
     #Find the largest total (least constraining value)
     largestTotal = totalAmountAffected[0]
     lsv = 0
