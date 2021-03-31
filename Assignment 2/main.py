@@ -60,29 +60,29 @@ def backtrack():
     backtrackHelper(domains, constraints, [])
 
 def backtrackHelper(workingDomains, workingConstraints, chosenVars):
-    if len(workingDomains) == len(chosenVars): #We successfully assigned all variables then
+    if len(workingDomains) == len(chosenVars): #We successfully assigned all variables then (Base case)
         printBranch(chosenVars, 'solution')
         return True
-    #domIndex = 0    #Domain index representing the current entry in the list of values possibl;e for a variable's domain
-    #print('Chosen Vars so far: ', chosenVars)
+
+    #Need a simple version for mostConstrained and leastConstrainingValue
     simpleChosenVars = []
     for touple in chosenVars:
         simpleChosenVars.append(touple[0])
     MCVar = mostConstrained(workingDomains, simpleChosenVars)
-    #print('========')
-    #print('Length of remaining domains for the variable \'', MCVar, '\': ', len(workingDomains[MCVar]))
-    #print('Remaining domains for the variable \'', MCVar, '\': ', workingDomains[MCVar])
+
+    #Python and Dictionaries are weird, so have to do this so that we don't overwrite information higher in the recursion tree.
     currVarDomain = workingDomains[MCVar].copy()
     workingDomains[MCVar] = currVarDomain
+
+    #loop till all values in the domain have been tried
     while len(currVarDomain) >= 1:
+        #Find leastConstraingValue
         currentValue = leastConstrainingValue(MCVar, workingDomains, simpleChosenVars)
-        #print('Variable chosen: ',MCVar)
-        #print('Current Value: ',currentValue)
         currVarDomain.remove(currentValue)
-        #print('Working  Domain',workingDomains)
         failed = False
         assignment = (MCVar, currentValue)
 
+        #Loop through contraints, if a constraint is affected by a var check it with already assigned variables to see if it fails.
         for currConstraint in constraints:
             constraintWorked = True
             if MCVar in currConstraint:
@@ -102,23 +102,23 @@ def backtrackHelper(workingDomains, workingConstraints, chosenVars):
                 #print(currConstraint," did not work")
                 failed = True
                 break
-
-        #domIndex = domIndex + 1
-        newChosenVars = chosenVars.copy() #Probably need to make this a variable passed on each recursion
+        
+        #Copy chosenVars with our current var appended to it to pass on
+        newChosenVars = chosenVars.copy() 
         newChosenVars.append(assignment)
-                #Failed, try next index
+        #Failed, try next index
         if failed:
             printBranch(newChosenVars, 'failure')
-            #print('========')
             continue
+
         #Make a copy of domains without the current var to pass on
         newDomains = workingDomains.copy()
         newDomains[MCVar] = [assignment[1]]
-        #newDomains.pop(MCVar) don't pop full variable, just want to reduce list
-        #workingConstraints.pop()  #how to actually make sure we're removing the correct element here?
+
+        #Recursively call backtrack
         if backtrackHelper(newDomains, workingConstraints, newChosenVars):
             return True
-    return False #is this right?? how do we actually know if the backtrack returned successfully??
+    return False 
 
 def forwardCheck():
     print(leastConstrainingValue('D', domains))
