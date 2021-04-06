@@ -19,6 +19,7 @@ def negateClause(clause):
         CNF = []
         CNF.append([clause[0][i]])
         CNF.append([not clause[1][i]])
+        CNF.append([])
         KB.append(CNF)
 #Attempt to open files, return true if successful
 def openFiles():
@@ -40,8 +41,9 @@ def closeFiles():
 
 def printKB():
     global KB
+    line = 1
     for clause in KB:
-        output = ""
+        output = str(line) + ". "
         for i in range(len(clause[0])):
             if clause[1][i] == True:
                 output += "~"
@@ -49,7 +51,15 @@ def printKB():
 
             if i < len(clause[0]) - 1:
                 output += " "
+        output += " {"
+        for i in range(len(clause[2])):
+            if i == len(clause[2]) - 1:
+                output += str(clause[2][i])
+            else:
+                output += str(clause[2][i]) + ", "
+        output += "}"
         print(output)
+        line += 1
 
 #Include logic for reading command line, files, and main processes here.
 #Check for exact number of command line arguments
@@ -82,6 +92,8 @@ if not inFile == None:
         CNF = []
         CNF.append(literals)
         CNF.append(negations)
+        CNF.append([])
+        print(CNF)
 
         nextLine = inFile.readline()
 
