@@ -14,6 +14,12 @@ KB = [] #A 3D array of the knowledge base. Access in the form KB[Clause][Var/Val
 origClause = None
 
 #Functions
+def negateClause(clause):
+    for i in range(len(clause[0])):
+        CNF = []
+        CNF.append([clause[0][i]])
+        CNF.append([not clause[1][i]])
+        KB.append(CNF)
 #Attempt to open files, return true if successful
 def openFiles():
     #Check if the given inFile file exists
@@ -84,6 +90,7 @@ if not inFile == None:
         else:
             #Final line is to be checked with resolution somehow, I don't think it goes in the KB??
             origClause = CNF
-        
+
+negateClause(origClause)
 printKB()
 closeFiles()
