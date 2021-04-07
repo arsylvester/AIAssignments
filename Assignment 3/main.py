@@ -102,10 +102,13 @@ def createNewClause(clausei, clausej, commonLiterali, commonLiteralj):
     #Check that it doesn't evaluate to true always
     if not duplicate:
         for x in range(len(literals)):
-            for y in range(len(literals) - x - 1, len(literals)):
+            for y in range(x, len(literals)):
                 if literals[x] == literals[y] and negations[x] != negations[y]:
                     duplicate = True
+                    break
                     #print("Is true always")
+            if duplicate:
+                break
     global clauseTotal
     if not duplicate:
         KB.append(newClause)
