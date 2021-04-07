@@ -11,6 +11,7 @@ import array
 inFile = None
 KB = [] #A 3D array of the knowledge base. Access in the form KB[Clause][Var/Val][Literal]
         #There are n-1 clauses, 2 var/val options, and ?? number of literals
+sortedKB = []
 origClause = None
 clauseTotal = 0
 
@@ -84,15 +85,17 @@ def createNewClause(clausei, clausej, commonLiterali, commonLiteralj):
                 #print("Is true always")
         if duplicate:
             break
-    
-    newClause.sort()
+    #Create sorted copy for optimized search
+    sortedNewClause = newClause.copy()
+    sortedNewClause.sort()
     if not duplicate:
-        if newClause in KB:
+        if sortedNewClause in sortedKB:
             duplicate = True
     #print("Is already in KB: ",duplicate)
     global clauseTotal
     if not duplicate:
         KB.append(newClause)
+        sortedKB.append(sortedNewClause)
         clauseTotal += 1
         print("New clause added",clauseTotal)
         #printKB()
@@ -175,12 +178,14 @@ if not inFile == None:
         #CNF.append(negations)
         #CNF.append([])
         #print(CNF)
-        CNF.sort()
+        sortedCNF = CNF.copy()
+        sortedCNF.sort()
 
         nextLine = inFile.readline()
 
         if not nextLine == "":
             KB.append(CNF)
+            sortedKB.append(sortedCNF)
             clauseTotal += 1
         else:
             #Final line is to be checked with resolution somehow, I don't think it goes in the KB??
