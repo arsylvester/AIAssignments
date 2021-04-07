@@ -9,20 +9,21 @@ import array
 
 #Global vars
 inFile = None
-KB = [] #A 3D array of the knowledge base. Access in the form KB[Clause][Var/Val][Literal]
+KB = [] #A 3D array of the knowledge base. Access in the form KB[Clause][Literal][Var/Val]
         #There are n-1 clauses, 2 var/val options, and ?? number of literals
-sortedKB = []
+        #Each clause stores the literals as a tuple with the literal string and bool for if there is a ~. ~a = (a, True)
+sortedKB = [] #Copy of KB but each clause is in alphabetical order. This is used to more optimally search for duplicate clauses.
 origClause = None
 clauseTotal = 1
 
 #Functions
+#Take the clause to test for and break it apart and negate it and add to the KB
 def negateClause(clause):
     global KB
     global sortedKB
     for i in range(len(clause)):
         CNF = []
         CNF.append((clause[i][0],not clause[i][1]))
-        #CNF.append([])
         sortedKB.append(CNF.copy())
         CNF.append((0,0))
         KB.append(CNF)
@@ -30,7 +31,6 @@ def negateClause(clause):
 
 #Iterate through KB and find resolutions. If found create new clause. If new clause would be empty contradiction is found.
 def findNewClause():
-    #print("Starting anew")
     clausei = 0
     KBSize = len(KB)
     while clausei < KBSize:
@@ -39,48 +39,35 @@ def findNewClause():
             for x in range(len(KB[clausej]) - 1):
                 for y in range(len(KB[clausei]) - 1):
                     if KB[clausei][y][0] == KB[clausej][x][0] and KB[clausei][y][1] != KB[clausej][x][1]:
-                        #print(KB[clausei]," and ",KB[clausej]," can cancel.")
                         if len(KB[clausei]) == 2 and len(KB[clausej]) == 2:
                             contradiction = [("Contradiction",False), (clausei + 1, clausej + 1)]
                             KB.append(contradiction)
                             printKBLine(contradiction)
-                            #print("Contradiction {" + str(clausei + 1) + ", " + str(clausej + 1) + "}")
                             return True #Contradiction found
                         newClauseFound = createNewClause(clausei, clausej, y, x)
-                        #return findNewClause() #CHANGE FROM RECURSION TO LOOP
                         break
                 if newClauseFound:
                     KBSize += 1
                     break
         clausei += 1
-    #if not newClauseFound:
-    #printKB()
     return False #No contradiction found
 
 #Create new clause from the two passed in clauses.                        
 def createNewClause(clausei, clausej, commonLiterali, commonLiteralj):
     newClause = []
-    #literals = []
-    #negations = []
+
     #Get all literals from clause i
     for i in range(len(KB[clausei]) - 1):
         if i != commonLiterali:
             newClause.append((KB[clausei][i][0], KB[clausei][i][1]))
+
     #Get all unique literals from clause j
     for i in range(len(KB[clausej]) - 1):
         if i != commonLiteralj:
             if KB[clausej][i] in newClause:
-                #print("Already in clause")
                 continue
-            #print("Adding literal from j")
             newClause.append(KB[clausej][i])
-            #negations.append(KB[clausej][1][i])
     
-    #newClause.append(literals)
-    #newClause.append(negations)
-    #newClause.append([clausei + 1, clausej + 1])
-    #print("Creating new clause with: ",clausei + 1," ",clausej + 1,": ",newClause)
-    #print("New clause created",newClause)
     duplicate = False
     #Check that it doesn't evaluate to true always
     for x in range(len(newClause)):
@@ -88,22 +75,20 @@ def createNewClause(clausei, clausej, commonLiterali, commonLiteralj):
             if newClause[x][0] == newClause[y][0] and newClause[x][1] != newClause[y][1]:
                 duplicate = True
                 break
-                #print("Is true always")
         if duplicate:
             break
+
     #Create sorted copy for optimized search
     sortedNewClause = newClause.copy()
     sortedNewClause.sort()
     if not duplicate:
         if sortedNewClause in sortedKB:
             duplicate = True
-    #print("Is already in KB: ",duplicate)
-    global clauseTotal
+
     if not duplicate:
         newClause.append((clausei + 1, clausej + 1))
         KB.append(newClause)
         sortedKB.append(sortedNewClause)
-        #print("New clause added",clauseTotal)
         printKBLine(newClause)
         return True
     else:
@@ -127,6 +112,7 @@ def closeFiles():
     if(not inFile == None):
         inFile.close()
 
+#Prints whole KB. Not currently being used in the program as we opted to print each line seperatly as we find a new clause.
 def printKB():
     global KB
     line = 1
@@ -153,6 +139,7 @@ def printKB():
         print(output)
         line += 1
 
+#Print the current clause.
 def printKBLine(clause):
     global KB
     global clauseTotal
@@ -202,10 +189,8 @@ if not inFile == None:
         CNF = []
         for i in range(len(literals)):
             CNF.append((literals[i], negations[i]))
-        #CNF.append(literals)
-        #CNF.append(negations)
-        #CNF.append([])
-        #print(CNF)
+        
+        #Copy and sort clause
         sortedCNF = CNF.copy()
         sortedCNF.sort()
 
@@ -220,13 +205,9 @@ if not inFile == None:
             #Final line is to be checked with resolution somehow, I don't think it goes in the KB??
             origClause = CNF
 
-#testArray = [[[("a", False), ("b", True)], [1, 3]], [[("c", False), ("d", True)], [1, 2]]]
-if ("a", False) == ("b", False):
-    print("In array")
-
 negateClause(origClause)
-#printKB()
-if findNewClause(): #ADD current line number
+
+if findNewClause():
     print("Valid")
 else:
     print("Fail")
