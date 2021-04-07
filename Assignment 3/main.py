@@ -23,40 +23,76 @@ def negateClause(clause):
         KB.append(CNF)
 
 def findNewClause():
-    for clausei in reversed(range(len(KB))):
+    while True:
         newClauseFound = False
-        for clausej in range(clausei):
-            for x in range(len(KB[clausej][0])):
-                for y in range(len(KB[clausei][0])):
-                    if KB[clausei][0][y] == KB[clausej][0][x] and KB[clausei][1][y] != KB[clausej][1][x]:
-                        #print(KB[clausei]," and ",KB[clausej]," can cancel.")
-                        if len(KB[clausei][0]) == len(KB[clausej][0]):
-                            printKB()
-                            print("Contradiction {" + str(clausei + 1) + ", " + str(clausej + 1) + "}")
-                            return True #Contradiction found
-                        createNewClause(clausei, clausej, y, x)
-                        return findNewClause()
-                        newClauseFound = True
+        for clausei in reversed(range(len(KB))):
+            for clausej in range(clausei):
+                for x in range(len(KB[clausej][0])):
+                    for y in range(len(KB[clausei][0])):
+                        if KB[clausei][0][y] == KB[clausej][0][x] and KB[clausei][1][y] != KB[clausej][1][x]:
+                            #print(KB[clausei]," and ",KB[clausej]," can cancel.")
+                            if len(KB[clausei][0]) == 1 and len(KB[clausej][0]) == 1:
+                                printKB()
+                                print("Contradiction {" + str(clausei + 1) + ", " + str(clausej + 1) + "}")
+                                return True #Contradiction found
+                            newClauseFound = createNewClause(clausei, clausej, y, x)
+                            #return findNewClause() #CHANGE FROM RECURSION TO LOOP
+                            break
+                    if newClauseFound:
                         break
-    return False #No contradiction found
+                if newClauseFound:
+                    break
+            if newClauseFound:
+                break
+        if not newClauseFound:
+            return False #No contradiction found
                         
 def createNewClause(clausei, clausej, commonLiterali, commonLiteralj):
+    #print("Start of creating new clause")
     newClause = []
     literals = []
     negations = []
     for i in range(len(KB[clausei][0])):
-        if KB[clausei][0][i] != KB[clausei][0][commonLiterali]: #STILL NEED TO CHECK FOR DUPLICATES
+        if KB[clausei][0][i] != KB[clausei][0][commonLiterali]:
             literals.append(KB[clausei][0][i])
             negations.append(KB[clausei][1][i])
     for i in range(len(KB[clausej][0])):
         if KB[clausej][0][i] != KB[clausej][0][commonLiteralj]: #STILL NEED TO CHECK FOR DUPLICATES
+            isDup = False
+            for x in range(len(literals)):
+                if KB[clausej][0][i] == literals[x] and KB[clausej][1][i] == negations[x]:
+                    isDup = True
+                    break
+            if isDup:
+                continue
             literals.append(KB[clausej][0][i])
             negations.append(KB[clausej][1][i])
-
+    
     newClause.append(literals)
     newClause.append(negations)
     newClause.append([clausei + 1, clausej + 1])
-    KB.append(newClause)
+    #print("New clause created",newClause)
+    duplicate = False
+    for clauses in range(len(KB)):
+        clauseDup = True
+        for i in range(len(KB[clauses][0])):
+            literalDup = False
+            for j in range(len(literals)):
+                if literals[j] == KB[clauses][0][i] and negations[j] == KB[clauses][1][i]:
+                    literalDup = True
+                    break
+            if not literalDup:
+                clauseDup = False
+                break
+        if clauseDup:
+            duplicate = True
+    if not duplicate:
+        KB.append(newClause)
+        print("New clause added",newClause)
+        #printKB()
+        return True
+    else:
+        return False
 
 #Attempt to open files, return true if successful
 def openFiles():
