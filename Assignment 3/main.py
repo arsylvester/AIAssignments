@@ -22,6 +22,7 @@ def negateClause(clause):
         CNF.append([])
         KB.append(CNF)
 
+#Iterate through KB and find resolutions. If found create new clause. If new clause would be empty contradiction is found.
 def findNewClause():
     while True:
         newClauseFound = False
@@ -32,8 +33,9 @@ def findNewClause():
                         if KB[clausei][0][y] == KB[clausej][0][x] and KB[clausei][1][y] != KB[clausej][1][x]:
                             #print(KB[clausei]," and ",KB[clausej]," can cancel.")
                             if len(KB[clausei][0]) == 1 and len(KB[clausej][0]) == 1:
+                                KB.append([["Contradiction"], [False], [clausei + 1, clausej + 1]])
                                 printKB()
-                                print("Contradiction {" + str(clausei + 1) + ", " + str(clausej + 1) + "}")
+                                #print("Contradiction {" + str(clausei + 1) + ", " + str(clausej + 1) + "}")
                                 return True #Contradiction found
                             newClauseFound = createNewClause(clausei, clausej, y, x)
                             #return findNewClause() #CHANGE FROM RECURSION TO LOOP
@@ -46,7 +48,8 @@ def findNewClause():
                 break
         if not newClauseFound:
             return False #No contradiction found
-                        
+
+#Create new clause from the two passed in clauses.                        
 def createNewClause(clausei, clausej, commonLiterali, commonLiteralj):
     newClause = []
     literals = []
@@ -74,7 +77,7 @@ def createNewClause(clausei, clausej, commonLiterali, commonLiteralj):
     newClause.append(literals)
     newClause.append(negations)
     newClause.append([clausei + 1, clausej + 1])
-    print("Creating new clause with: ",clausei + 1," ",clausej + 1,": ",newClause)
+    #print("Creating new clause with: ",clausei + 1," ",clausej + 1,": ",newClause)
     #print("New clause created",newClause)
     duplicate = False
     #Check that clause is not already in the KB
@@ -104,7 +107,7 @@ def createNewClause(clausei, clausej, commonLiterali, commonLiteralj):
                     #print("Is true always")
     if not duplicate:
         KB.append(newClause)
-        print("New clause added",newClause)
+        #print("New clause added",newClause)
         #printKB()
         return True
     else:
@@ -196,5 +199,5 @@ negateClause(origClause)
 if findNewClause(): #ADD current line number
     print("Valid")
 else:
-    print("Not Valid")
+    print("Fail")
 closeFiles()
