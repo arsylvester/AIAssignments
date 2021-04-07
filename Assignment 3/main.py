@@ -21,6 +21,8 @@ def negateClause(clause):
         CNF = []
         CNF.append((clause[i][0],not clause[i][1]))
         #CNF.append([])
+        sortedKB.append(CNF.copy())
+        CNF.append((0,0))
         KB.append(CNF)
 
 #Iterate through KB and find resolutions. If found create new clause. If new clause would be empty contradiction is found.
@@ -31,12 +33,12 @@ def findNewClause():
     while clausei < KBSize:
         for clausej in range(clausei):
             newClauseFound = False
-            for x in range(len(KB[clausej])):
-                for y in range(len(KB[clausei])):
+            for x in range(len(KB[clausej]) - 1):
+                for y in range(len(KB[clausei]) - 1):
                     if KB[clausei][y][0] == KB[clausej][x][0] and KB[clausei][y][1] != KB[clausej][x][1]:
                         #print(KB[clausei]," and ",KB[clausej]," can cancel.")
-                        if len(KB[clausei]) == 1 and len(KB[clausej]) == 1:
-                            KB.append([("Contradiction",False)])#, [clausei + 1, clausej + 1]])
+                        if len(KB[clausei]) == 2 and len(KB[clausej]) == 2:
+                            KB.append([("Contradiction",False), (clausei + 1, clausej + 1)])
                             printKB()
                             #print("Contradiction {" + str(clausei + 1) + ", " + str(clausej + 1) + "}")
                             return True #Contradiction found
@@ -57,11 +59,11 @@ def createNewClause(clausei, clausej, commonLiterali, commonLiteralj):
     #literals = []
     #negations = []
     #Get all literals from clause i
-    for i in range(len(KB[clausei])):
+    for i in range(len(KB[clausei]) - 1):
         if i != commonLiterali:
             newClause.append((KB[clausei][i][0], KB[clausei][i][1]))
     #Get all unique literals from clause j
-    for i in range(len(KB[clausej])):
+    for i in range(len(KB[clausej]) - 1):
         if i != commonLiteralj:
             if KB[clausej][i] in newClause:
                 #print("Already in clause")
@@ -94,6 +96,7 @@ def createNewClause(clausei, clausej, commonLiterali, commonLiteralj):
     #print("Is already in KB: ",duplicate)
     global clauseTotal
     if not duplicate:
+        newClause.append((clausei + 1, clausej + 1))
         KB.append(newClause)
         sortedKB.append(sortedNewClause)
         clauseTotal += 1
@@ -126,14 +129,18 @@ def printKB():
     line = 1
     for clause in KB:
         output = str(line) + ". "
-        for i in range(len(clause)):
+        for i in range(len(clause) - 1):
             if clause[i][1] == True:
                 output += "~"
             output += clause[i][0]
 
-            if i < len(clause) - 1:
+            if i < len(clause) - 2:
                 output += " "
-        #output += " {"
+        if clause[len(clause) - 1][0] == 0:
+            output += " {}"
+        else:
+            output += " {" + str(clause[len(clause) - 1][0]) + ", " + str(clause[len(clause) - 1][1]) + "}"
+
         #for i in range(len(clause[2])):
         #    if i == len(clause[2]) - 1:
         #        output += str(clause[2][i])
@@ -184,6 +191,7 @@ if not inFile == None:
         nextLine = inFile.readline()
 
         if not nextLine == "":
+            CNF.append((0,0))
             KB.append(CNF)
             sortedKB.append(sortedCNF)
             clauseTotal += 1
@@ -196,7 +204,7 @@ if ("a", False) == ("b", False):
     print("In array")
 
 negateClause(origClause)
-printKB()
+#printKB()
 if findNewClause(): #ADD current line number
     print("Valid")
 else:
