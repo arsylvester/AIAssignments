@@ -25,7 +25,7 @@ def negateClause(clause):
 def findNewClause():
     while True:
         newClauseFound = False
-        for clausei in reversed(range(len(KB))):
+        for clausei in range(len(KB)):
             for clausej in range(clausei):
                 for x in range(len(KB[clausej][0])):
                     for y in range(len(KB[clausei][0])):
@@ -48,44 +48,60 @@ def findNewClause():
             return False #No contradiction found
                         
 def createNewClause(clausei, clausej, commonLiterali, commonLiteralj):
-    #print("Start of creating new clause")
     newClause = []
     literals = []
     negations = []
+    #Get all literals from clause i
     for i in range(len(KB[clausei][0])):
-        if KB[clausei][0][i] != KB[clausei][0][commonLiterali]:
+        if i != commonLiterali:
             literals.append(KB[clausei][0][i])
             negations.append(KB[clausei][1][i])
+    #Get all unique literals from clause j
     for i in range(len(KB[clausej][0])):
-        if KB[clausej][0][i] != KB[clausej][0][commonLiteralj]: #STILL NEED TO CHECK FOR DUPLICATES
+        if i != commonLiteralj:
             isDup = False
             for x in range(len(literals)):
                 if KB[clausej][0][i] == literals[x] and KB[clausej][1][i] == negations[x]:
+                    #print("Already in clause")
                     isDup = True
                     break
             if isDup:
                 continue
+            #print("Adding literal from j")
             literals.append(KB[clausej][0][i])
             negations.append(KB[clausej][1][i])
     
     newClause.append(literals)
     newClause.append(negations)
     newClause.append([clausei + 1, clausej + 1])
+    print("Creating new clause with: ",clausei + 1," ",clausej + 1,": ",newClause)
     #print("New clause created",newClause)
     duplicate = False
+    #Check that clause is not already in the KB
     for clauses in range(len(KB)):
-        clauseDup = True
-        for i in range(len(KB[clauses][0])):
-            literalDup = False
-            for j in range(len(literals)):
-                if literals[j] == KB[clauses][0][i] and negations[j] == KB[clauses][1][i]:
-                    literalDup = True
+        if(len(literals) == len(KB[clauses][0])):
+            clauseDup = True
+            for i in range(len(literals)):
+                literalDup = False
+                for j in range(len(KB[clauses][0])):
+                    if literals[i] == KB[clauses][0][j] and negations[i] == KB[clauses][1][j]:
+                        literalDup = True
+                        #print(literals[i]," is dup of ", KB[clauses][0][j]," and ", negations[i]," with ",KB[clauses][1][j])
+                        break
+                if not literalDup:
+                    clauseDup = False
                     break
-            if not literalDup:
-                clauseDup = False
-                break
-        if clauseDup:
-            duplicate = True
+            if clauseDup:
+                duplicate = True
+    #print("Is already in KB: ",duplicate)
+
+    #Check that it doesn't evaluate to true always
+    if not duplicate:
+        for x in range(len(literals)):
+            for y in range(len(literals) - x - 1, len(literals)):
+                if literals[x] == literals[y] and negations[x] != negations[y]:
+                    duplicate = True
+                    #print("Is true always")
     if not duplicate:
         KB.append(newClause)
         print("New clause added",newClause)
@@ -177,7 +193,7 @@ if not inFile == None:
             origClause = CNF
 
 negateClause(origClause)
-if findNewClause():
+if findNewClause(): #ADD current line number
     print("Valid")
 else:
     print("Not Valid")
