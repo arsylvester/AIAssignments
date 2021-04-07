@@ -12,6 +12,7 @@ inFile = None
 KB = [] #A 3D array of the knowledge base. Access in the form KB[Clause][Var/Val][Literal]
         #There are n-1 clauses, 2 var/val options, and ?? number of literals
 origClause = None
+clauseTotal = 0
 
 #Functions
 def negateClause(clause):
@@ -24,30 +25,30 @@ def negateClause(clause):
 
 #Iterate through KB and find resolutions. If found create new clause. If new clause would be empty contradiction is found.
 def findNewClause():
-    while True:
-        newClauseFound = False
-        for clausei in range(len(KB)):
-            for clausej in range(clausei):
-                for x in range(len(KB[clausej][0])):
-                    for y in range(len(KB[clausei][0])):
-                        if KB[clausei][0][y] == KB[clausej][0][x] and KB[clausei][1][y] != KB[clausej][1][x]:
-                            #print(KB[clausei]," and ",KB[clausej]," can cancel.")
-                            if len(KB[clausei][0]) == 1 and len(KB[clausej][0]) == 1:
-                                KB.append([["Contradiction"], [False], [clausei + 1, clausej + 1]])
-                                printKB()
-                                #print("Contradiction {" + str(clausei + 1) + ", " + str(clausej + 1) + "}")
-                                return True #Contradiction found
-                            newClauseFound = createNewClause(clausei, clausej, y, x)
-                            #return findNewClause() #CHANGE FROM RECURSION TO LOOP
-                            break
-                    if newClauseFound:
+    #print("Starting anew")
+    clausei = 0
+    KBSize = len(KB)
+    while clausei < KBSize:
+        for clausej in range(clausei):
+            newClauseFound = False
+            for x in range(len(KB[clausej][0])):
+                for y in range(len(KB[clausei][0])):
+                    if KB[clausei][0][y] == KB[clausej][0][x] and KB[clausei][1][y] != KB[clausej][1][x]:
+                        #print(KB[clausei]," and ",KB[clausej]," can cancel.")
+                        if len(KB[clausei][0]) == 1 and len(KB[clausej][0]) == 1:
+                            KB.append([["Contradiction"], [False], [clausei + 1, clausej + 1]])
+                            printKB()
+                            #print("Contradiction {" + str(clausei + 1) + ", " + str(clausej + 1) + "}")
+                            return True #Contradiction found
+                        newClauseFound = createNewClause(clausei, clausej, y, x)
+                        #return findNewClause() #CHANGE FROM RECURSION TO LOOP
                         break
                 if newClauseFound:
+                    KBSize += 1
                     break
-            if newClauseFound:
-                break
-        if not newClauseFound:
-            return False #No contradiction found
+        clausei += 1
+    #if not newClauseFound:
+    return False #No contradiction found
 
 #Create new clause from the two passed in clauses.                        
 def createNewClause(clausei, clausej, commonLiterali, commonLiteralj):
@@ -105,9 +106,11 @@ def createNewClause(clausei, clausej, commonLiterali, commonLiteralj):
                 if literals[x] == literals[y] and negations[x] != negations[y]:
                     duplicate = True
                     #print("Is true always")
+    global clauseTotal
     if not duplicate:
         KB.append(newClause)
-        #print("New clause added",newClause)
+        clauseTotal += 1
+        print("New clause added",clauseTotal)
         #printKB()
         return True
     else:
@@ -191,6 +194,7 @@ if not inFile == None:
 
         if not nextLine == "":
             KB.append(CNF)
+            clauseTotal += 1
         else:
             #Final line is to be checked with resolution somehow, I don't think it goes in the KB??
             origClause = CNF
