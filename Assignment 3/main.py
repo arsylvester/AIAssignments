@@ -13,10 +13,12 @@ KB = [] #A 3D array of the knowledge base. Access in the form KB[Clause][Var/Val
         #There are n-1 clauses, 2 var/val options, and ?? number of literals
 sortedKB = []
 origClause = None
-clauseTotal = 0
+clauseTotal = 1
 
 #Functions
 def negateClause(clause):
+    global KB
+    global sortedKB
     for i in range(len(clause)):
         CNF = []
         CNF.append((clause[i][0],not clause[i][1]))
@@ -24,6 +26,7 @@ def negateClause(clause):
         sortedKB.append(CNF.copy())
         CNF.append((0,0))
         KB.append(CNF)
+        printKBLine(CNF)
 
 #Iterate through KB and find resolutions. If found create new clause. If new clause would be empty contradiction is found.
 def findNewClause():
@@ -38,8 +41,9 @@ def findNewClause():
                     if KB[clausei][y][0] == KB[clausej][x][0] and KB[clausei][y][1] != KB[clausej][x][1]:
                         #print(KB[clausei]," and ",KB[clausej]," can cancel.")
                         if len(KB[clausei]) == 2 and len(KB[clausej]) == 2:
-                            KB.append([("Contradiction",False), (clausei + 1, clausej + 1)])
-                            printKB()
+                            contradiction = [("Contradiction",False), (clausei + 1, clausej + 1)]
+                            KB.append(contradiction)
+                            printKBLine(contradiction)
                             #print("Contradiction {" + str(clausei + 1) + ", " + str(clausej + 1) + "}")
                             return True #Contradiction found
                         newClauseFound = createNewClause(clausei, clausej, y, x)
@@ -50,7 +54,7 @@ def findNewClause():
                     break
         clausei += 1
     #if not newClauseFound:
-    printKB()
+    #printKB()
     return False #No contradiction found
 
 #Create new clause from the two passed in clauses.                        
@@ -99,9 +103,8 @@ def createNewClause(clausei, clausej, commonLiterali, commonLiteralj):
         newClause.append((clausei + 1, clausej + 1))
         KB.append(newClause)
         sortedKB.append(sortedNewClause)
-        clauseTotal += 1
-        print("New clause added",clauseTotal)
-        #printKB()
+        #print("New clause added",clauseTotal)
+        printKBLine(newClause)
         return True
     else:
         return False
@@ -150,6 +153,24 @@ def printKB():
         print(output)
         line += 1
 
+def printKBLine(clause):
+    global KB
+    global clauseTotal
+    output = str(clauseTotal) + ". "
+    clauseTotal += 1
+    for i in range(len(clause) - 1):
+        if clause[i][1] == True:
+            output += "~"
+        output += clause[i][0]
+
+        if i < len(clause) - 2:
+            output += " "
+    if clause[len(clause) - 1][0] == 0:
+        output += " {}"
+    else:
+        output += " {" + str(clause[len(clause) - 1][0]) + ", " + str(clause[len(clause) - 1][1]) + "}"
+    print(output)
+
 #Include logic for reading command line, files, and main processes here.
 #Check for exact number of command line arguments
 if not len(sys.argv) == 2:
@@ -194,7 +215,7 @@ if not inFile == None:
             CNF.append((0,0))
             KB.append(CNF)
             sortedKB.append(sortedCNF)
-            clauseTotal += 1
+            printKBLine(CNF)
         else:
             #Final line is to be checked with resolution somehow, I don't think it goes in the KB??
             origClause = CNF
