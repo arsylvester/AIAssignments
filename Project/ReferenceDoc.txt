@@ -1,0 +1,29 @@
+Capture.py
+- The main file that runs games locally. This file also describes the new capture the flag GameState type and rules.
+- Run this to run the game.
+- Contains the methods to get information about the gamestate.
+CaptureAgents.py
+- Specification and helper methods for capture agents.
+baselineTeam.py
+- Example code that defines two very basic reflex agents, to help you get started.
+- This is the default team that plays.
+myTeam.py
+-  This is where you define your own agents for inclusion in the tournament. (This is the only file that you submit.)
+- Must have create team function (Rename the selected agents though)
+- Must have agent classes that inherit from CaptureAgent, which has functions registerInitialState and chooseAction
+
+
+initial agent functionality
+- Offensive
+	- Play fairly greedy, but at a certain threshold (~5 pellots or ~%10) reached, go back and score points
+	- Something to maybe know if its being chased and how close an enemy is to it. If so play safer (go back to base).
+		- Is it closer to base or to a powerpellet?
+		- Possible method to determine being chased: Get previous state and current state of enemies, and calculate whether they have moved closer to you or if their direction is pointing towards you. Each turn.
+	- If have a lead (~%5 point lead at least)? then play defense. Maybe a soft offense and defense
+	- Should we gun for power pellot?
+- Defensive
+	- Should play safe offense by defualt (No enemies in base). Hunt for pellets in the first ~3 columns of enemy territory
+	- Otherwise, play similar to the baseline defense and hunt enemies in base.
+	- Maybe play around power pellots, or around border?
+- Power pellet
+	- Don't count towards score4
