@@ -23,7 +23,7 @@ from util import nearestPoint
 #################
 
 def createTeam(firstIndex, secondIndex, isRed,
-               first = 'DefensiveTsohgAgent', second = 'DefensiveTsohgAgent'):
+               first = 'DummyAgent', second = 'DummyAgent'):
   """
   This function should return a list of two agents that will form the
   team, initialized using firstIndex and secondIndex as their agent
@@ -58,26 +58,28 @@ class NamcapCaptureAgent(CaptureAgent):
   def chooseAction(self, gameState):
     """
     Picks among the actions with the highest Q(s,a).
+    Given a state s and set of actions a, this agent will select an action that will help maximize the reward score for performing an action in that state. 
     """
     actions = gameState.getLegalActions(self.index)
 
     # You can profile your evaluation time by uncommenting these lines
     # start = time.time()
-    values = [self.evaluate(gameState, a) for a in actions]
+    values = [self.evaluate(gameState, a) for a in actions] # Determine how many points each action is worth (for all legal actions that can be performed)
     # print 'eval time for agent %d: %.4f' % (self.index, time.time() - start)
 
-    maxValue = max(values)
-    bestActions = [a for a, v in zip(actions, values) if v == maxValue]
+    maxValue = max(values) # Determine the best possible score for any action
+    bestActions = [a for a, v in zip(actions, values) if v == maxValue] # Keep track of every possible action with the highest possible score
 
     foodLeft = len(self.getFood(gameState).asList())
 
-    if foodLeft <= 2:
+    if foodLeft <= 2: # Agent will not return until all but two pellets are eaten
       bestDist = 9999
       for action in actions:
         successor = self.getSuccessor(gameState, action)
-        pos2 = successor.getAgentPosition(self.index)
-        dist = self.getMazeDistance(self.start,pos2)
-        if dist < bestDist:
+        pos2 = successor.getAgentPosition(self.index) # Keep track of where this action will put me on the map
+        dist = self.getMazeDistance(self.start,pos2)  # Keep track of the distance between this action's location and the spawn location
+                                                      # This could be updated to just be shortest path to anywhere on your own side!
+        if dist < bestDist: # Take the shortest path from here to spawn
           bestAction = action
           bestDist = dist
       return bestAction
