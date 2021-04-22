@@ -23,7 +23,7 @@ from util import nearestPoint
 #################
 
 def createTeam(firstIndex, secondIndex, isRed,
-               first = 'DummyAgent', second = 'DummyAgent'):
+               first = 'OffensiveNamcapAgent', second = 'DefensiveTsohgAgent'):
   """
   This function should return a list of two agents that will form the
   team, initialized using firstIndex and secondIndex as their agent
@@ -53,6 +53,7 @@ class NamcapCaptureAgent(CaptureAgent):
  
   def registerInitialState(self, gameState):
     self.start = gameState.getAgentPosition(self.index)
+    self.pellotLimit = len(self.getFood(gameState).asList()) - 2 #Pellot limit that when reached the agents will return to their side. Value hardcoded for now
     CaptureAgent.registerInitialState(self, gameState)
 
   def chooseAction(self, gameState):
@@ -72,7 +73,9 @@ class NamcapCaptureAgent(CaptureAgent):
 
     foodLeft = len(self.getFood(gameState).asList())
 
-    if foodLeft <= 2: # Agent will not return until all but two pellets are eaten
+    if foodLeft <= self.pellotLimit: # Agent will not return until all but two pellets are eaten
+      if self.getScore(gameState) > self.getScore(self.getPreviousObservation()): #If we scored this turn, go back for more points
+        self.pellotLimit -= 2
       bestDist = 9999
       for action in actions:
         successor = self.getSuccessor(gameState, action)
@@ -105,6 +108,13 @@ class NamcapCaptureAgent(CaptureAgent):
     features = self.getFeatures(gameState, action)
     weights = self.getWeights(gameState, action)
     return features * weights
+    """
+    Looks something like this
+    -2034
+    feature = {'distanceToFood': 35, 'successorScore': -20}
+    weights = {'distanceToFood': -1, 'successorScore': 100}
+    """
+    
 
   def getFeatures(self, gameState, action):
     """
@@ -121,6 +131,29 @@ class NamcapCaptureAgent(CaptureAgent):
     a counter or a dictionary.
     """
     return {'successorScore': 1.0}
+
+class OffensiveNamcapAgent(NamcapCaptureAgent):
+  """
+  A reflex agent that seeks food. This is an agent
+  we give you to get an idea of what an offensive agent might look like,
+  but it is by no means the best or only way to build an offensive agent.
+  """
+  def getFeatures(self, gameState, action):
+    features = util.Counter()
+    successor = self.getSuccessor(gameState, action)
+    foodList = self.getFood(successor).asList()    
+    features['successorScore'] = -len(foodList)#self.getScore(successor)
+
+    # Compute distance to the nearest food
+
+    if len(foodList) > 0: # This should always be True,  but better safe than sorry
+      myPos = successor.getAgentState(self.index).getPosition()
+      minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
+      features['distanceToFood'] = minDistance
+    return features
+
+  def getWeights(self, gameState, action):
+    return {'successorScore': 100, 'distanceToFood': -1}
 
 class DefensiveTsohgAgent(NamcapCaptureAgent):
   """

@@ -19,6 +19,7 @@ initial agent functionality
 	- Something to maybe know if its being chased and how close an enemy is to it. If so play safer (go back to base).
 		- Is it closer to base or to a powerpellet?
 		- Possible method to determine being chased: Get previous state and current state of enemies, and calculate whether they have moved closer to you or if their direction is pointing towards you. Each turn.
+		- If being chased don't taking any turns that lead you to a dead end.
 	- If have a lead (~%5 point lead at least)? then play defense. Maybe a soft offense and defense
 	- Should we gun for power pellot?
 - Defensive
