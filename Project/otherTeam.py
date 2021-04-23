@@ -55,9 +55,39 @@ class NamcapCaptureAgent(CaptureAgent):
     self.start = gameState.getAgentPosition(self.index)
     self.pelletLimit = len(self.getFood(gameState).asList()) - 2 #Pellet limit that when reached the agents will return to their side. Value hardcoded for now
     CaptureAgent.registerInitialState(self, gameState)
-    self.halfwayPoint = len(gameState.getRedFood()[0])
-    #print(len(gameState.getRedFood()[0]))
-    #print(gameState.getAgentState(self.index).getPosition())
+
+  def chooseAction(self, gameState):
+    """
+    Picks among the actions with the highest Q(s,a).
+    Given a state s and set of actions a, this agent will select an action that will help maximize the reward score for performing an action in that state. 
+    """
+    actions = gameState.getLegalActions(self.index)
+
+    # You can profile your evaluation time by uncommenting these lines
+    # start = time.time()
+    values = [self.evaluate(gameState, a) for a in actions] # Determine how many points each action is worth (for all legal actions that can be performed)
+    # print 'eval time for agent %d: %.4f' % (self.index, time.time() - start)
+
+    maxValue = max(values) # Determine the best possible score for any action
+    bestActions = [a for a, v in zip(actions, values) if v == maxValue] # Keep track of every possible action with the highest possible score
+
+    foodLeft = len(self.getFood(gameState).asList())
+
+    if foodLeft <= self.pelletLimit: # Agent will not return until all but two pellets are eaten
+      if self.getScore(gameState) > self.getScore(self.getPreviousObservation()): #If we scored this turn, go back for more points
+        self.pelletLimit -= 2
+      bestDist = 9999
+      for action in actions:
+        successor = self.getSuccessor(gameState, action)
+        pos2 = successor.getAgentPosition(self.index) # Keep track of where this action will put me on the map
+        dist = self.getMazeDistance(self.start,pos2)  # Keep track of the distance between this action's location and the spawn location
+                                                      # This could be updated to just be shortest path to anywhere on your own side!
+        if dist < bestDist: # Take the shortest path from here to spawn
+          bestAction = action
+          bestDist = dist
+      return bestAction
+
+    return random.choice(bestActions)
 
   def getSuccessor(self, gameState, action):
     """
@@ -76,7 +106,6 @@ class NamcapCaptureAgent(CaptureAgent):
     Computes a linear combination of features and feature weights
     """
     features = self.getFeatures(gameState, action)
-    #print(features)
     weights = self.getWeights(gameState, action)
     return features * weights
     """
@@ -108,107 +137,26 @@ class OffensiveNamcapAgent(NamcapCaptureAgent):
   A reflex agent that seeks food. This is an agent
   we give you to get an idea of what an offensive agent might look like,
   but it is by no means the best or only way to build an offensive agent.
-  """
-  def chooseAction(self, gameState):
-    """
-    Picks among the actions with the highest Q(s,a).
-    Given a state s and set of actions a, this agent will select an action that will help maximize the reward score for performing an action in that state. 
-    """
-    actions = gameState.getLegalActions(self.index)
 
-    # You can profile your evaluation time by uncommenting these lines
-    # start = time.time()
-    values = [self.evaluate(gameState, a) for a in actions] # Determine how many points each action is worth (for all legal actions that can be performed)
-    # print 'eval time for agent %d: %.4f' % (self.index, time.time() - start)
-
-    maxValue = max(values) # Determine the best possible score for any action
-    bestActions = [a for a, v in zip(actions, values) if v == maxValue] # Keep track of every possible action with the highest possible score
-
-    foodLeft = len(self.getFood(gameState).asList())
-
-    if foodLeft <= self.pelletLimit: # Agent will not return until all but two pellets are eaten
-      currentPos = gameState.getAgentPosition(self.index)
-      if (currentPos[0] < self.halfwayPoint and self.red) or (currentPos[0] > self.halfwayPoint and not self.red): #If we scored this turn, go back for more points
-        self.pelletLimit -= 2
-      #elif(gameState.getAgentPosition(self.index) <)
-      bestDist = 9999
-      #print("Is returning to our side")
-      for action in actions:
-        successor = self.getSuccessor(gameState, action)
-        pos2 = successor.getAgentPosition(self.index) # Keep track of where this action will put me on the map
-        dist = self.getMazeDistance(self.start,pos2)  # Keep track of the distance between this action's location and the spawn location
-                                                      # This could be updated to just be shortest path to anywhere on your own side!
-        if dist < bestDist: # Take the shortest path from here to spawn
-          bestAction = action
-          bestDist = dist
-      return bestAction
-
-    return random.choice(bestActions)
-  """
   This function finds the amount of food left and the distance to food. 
   The closer a action is to food the lower the cost, and if an action recieves a pellet, drastically reduce the cost of the next action
   """
   def getFeatures(self, gameState, action):
-    #print(self.getScore(gameState)) 
-    if(self.getScore(gameState) < 2):
-      features = util.Counter()
-      successor = self.getSuccessor(gameState, action)
-      foodList = self.getFood(successor).asList()    
-      features['successorScore'] = -len(foodList)#self.getScore(successor)
-
-      # Compute distance to the nearest food
-
-      if len(foodList) > 0: # This should always be True,  but better safe than sorry
-        myPos = successor.getAgentState(self.index).getPosition()
-        minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
-        features['distanceToFood'] = minDistance
-      """
-      #If action leads to a ghost don't go that way
-      #print(successor.getAgentPosition(self.getOpponents(gameState)[0]))
-      opponentList = self.getOpponents(gameState)
-      for x in range(len(opponentList)):
-        myPos = successor.getAgentState(self.index).getPosition()
-        if(successor.getAgentPosition(self.getOpponents(gameState)[x]) == myPos):
-          features['isGhost'] = -1
-      """
-
-      return features
-    else:
-      return self.getFeaturesDef(gameState, action)
-
-  def getFeaturesDef(self, gameState, action):
     features = util.Counter()
     successor = self.getSuccessor(gameState, action)
+    foodList = self.getFood(successor).asList()    
+    features['successorScore'] = -len(foodList)#self.getScore(successor)
 
-    myState = successor.getAgentState(self.index)
-    myPos = myState.getPosition()
+    # Compute distance to the nearest food
 
-    # Computes whether we're on defense (1) or offense (0). This really just checks if we are on our side or not.
-    features['onDefense'] = 1
-    if myState.isPacman: features['onDefense'] = 0 
-
-    # Computes distance to invaders we can see
-    enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
-    invaders = [a for a in enemies if a.isPacman and a.getPosition() != None]
-    features['numInvaders'] = len(invaders)
-    if len(invaders) > 0:
-      dists = [self.getMazeDistance(myPos, a.getPosition()) for a in invaders]
-      features['invaderDistance'] = min(dists)
-
-    if action == Directions.STOP: features['stop'] = 1
-    rev = Directions.REVERSE[gameState.getAgentState(self.index).configuration.direction]
-    if action == rev: features['reverse'] = 1
-
+    if len(foodList) > 0: # This should always be True,  but better safe than sorry
+      myPos = successor.getAgentState(self.index).getPosition()
+      minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
+      features['distanceToFood'] = minDistance
     return features
 
   def getWeights(self, gameState, action):
-    if(self.getScore(gameState) >= 2):
-      return self.getWeightsDef(gameState, action)
-    else:
-      return {'successorScore': 100, 'distanceToFood': -1, 'isGhost': 1000}
-
-  def getWeightsDef(self, gameState, action):
-    return {'numInvaders': -1000, 'onDefense': 100, 'invaderDistance': -10, 'stop': -100, 'reverse': -2}
+    return {'successorScore': 100, 'distanceToFood': -1}
 
 class DefensiveTsohgAgent(NamcapCaptureAgent):
   """
@@ -217,23 +165,6 @@ class DefensiveTsohgAgent(NamcapCaptureAgent):
   could be like.  It is not the best or only way to make
   such an agent.
   """
-
-  def chooseAction(self, gameState):
-    """
-    Picks among the actions with the highest Q(s,a).
-    Given a state s and set of actions a, this agent will select an action that will help maximize the reward score for performing an action in that state. 
-    """
-    actions = gameState.getLegalActions(self.index)
-
-    # You can profile your evaluation time by uncommenting these lines
-    # start = time.time()
-    values = [self.evaluate(gameState, a) for a in actions] # Determine how many points each action is worth (for all legal actions that can be performed)
-    # print 'eval time for agent %d: %.4f' % (self.index, time.time() - start)
-
-    maxValue = max(values) # Determine the best possible score for any action
-    bestActions = [a for a, v in zip(actions, values) if v == maxValue] # Keep track of every possible action with the highest possible score
-
-    return random.choice(bestActions)
 
   def getFeatures(self, gameState, action):
     features = util.Counter()
