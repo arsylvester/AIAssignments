@@ -53,7 +53,7 @@ class NamcapCaptureAgent(CaptureAgent):
  
   def registerInitialState(self, gameState):
     self.start = gameState.getAgentPosition(self.index)
-    self.pellotLimit = len(self.getFood(gameState).asList()) - 2 #Pellot limit that when reached the agents will return to their side. Value hardcoded for now
+    self.pelletLimit = len(self.getFood(gameState).asList()) - 2 #Pellet limit that when reached the agents will return to their side. Value hardcoded for now
     CaptureAgent.registerInitialState(self, gameState)
 
   def chooseAction(self, gameState):
@@ -73,9 +73,9 @@ class NamcapCaptureAgent(CaptureAgent):
 
     foodLeft = len(self.getFood(gameState).asList())
 
-    if foodLeft <= self.pellotLimit: # Agent will not return until all but two pellets are eaten
+    if foodLeft <= self.pelletLimit: # Agent will not return until all but two pellets are eaten
       if self.getScore(gameState) > self.getScore(self.getPreviousObservation()): #If we scored this turn, go back for more points
-        self.pellotLimit -= 2
+        self.pelletLimit -= 2
       bestDist = 9999
       for action in actions:
         successor = self.getSuccessor(gameState, action)
@@ -137,6 +137,9 @@ class OffensiveNamcapAgent(NamcapCaptureAgent):
   A reflex agent that seeks food. This is an agent
   we give you to get an idea of what an offensive agent might look like,
   but it is by no means the best or only way to build an offensive agent.
+
+  This function finds the amount of food left and the distance to food. 
+  The closer a action is to food the lower the cost, and if an action recieves a pellet, drastically reduce the cost of the next action
   """
   def getFeatures(self, gameState, action):
     features = util.Counter()
@@ -170,9 +173,9 @@ class DefensiveTsohgAgent(NamcapCaptureAgent):
     myState = successor.getAgentState(self.index)
     myPos = myState.getPosition()
 
-    # Computes whether we're on defense (1) or offense (0)
+    # Computes whether we're on defense (1) or offense (0). This really just checks if we are on our side or not.
     features['onDefense'] = 1
-    if myState.isPacman: features['onDefense'] = 0
+    if myState.isPacman: features['onDefense'] = 0 
 
     # Computes distance to invaders we can see
     enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
