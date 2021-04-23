@@ -142,21 +142,56 @@ class OffensiveNamcapAgent(NamcapCaptureAgent):
   The closer a action is to food the lower the cost, and if an action recieves a pellet, drastically reduce the cost of the next action
   """
   def getFeatures(self, gameState, action):
+    print(self.getScore(gameState)) 
+    if(self.getScore(gameState) < 2):
+      features = util.Counter()
+      successor = self.getSuccessor(gameState, action)
+      foodList = self.getFood(successor).asList()    
+      features['successorScore'] = -len(foodList)#self.getScore(successor)
+
+      # Compute distance to the nearest food
+
+      if len(foodList) > 0: # This should always be True,  but better safe than sorry
+        myPos = successor.getAgentState(self.index).getPosition()
+        minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
+        features['distanceToFood'] = minDistance
+      return features
+    else:
+      return self.getFeaturesDef(gameState, action)
+
+  def getFeaturesDef(self, gameState, action):
     features = util.Counter()
     successor = self.getSuccessor(gameState, action)
-    foodList = self.getFood(successor).asList()    
-    features['successorScore'] = -len(foodList)#self.getScore(successor)
 
-    # Compute distance to the nearest food
+    myState = successor.getAgentState(self.index)
+    myPos = myState.getPosition()
 
-    if len(foodList) > 0: # This should always be True,  but better safe than sorry
-      myPos = successor.getAgentState(self.index).getPosition()
-      minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
-      features['distanceToFood'] = minDistance
+    # Computes whether we're on defense (1) or offense (0). This really just checks if we are on our side or not.
+    features['onDefense'] = 1
+    if myState.isPacman: features['onDefense'] = 0 
+
+    # Computes distance to invaders we can see
+    enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
+    invaders = [a for a in enemies if a.isPacman and a.getPosition() != None]
+    features['numInvaders'] = len(invaders)
+    if len(invaders) > 0:
+      dists = [self.getMazeDistance(myPos, a.getPosition()) for a in invaders]
+      features['invaderDistance'] = min(dists)
+
+    if action == Directions.STOP: features['stop'] = 1
+    rev = Directions.REVERSE[gameState.getAgentState(self.index).configuration.direction]
+    if action == rev: features['reverse'] = 1
+
     return features
 
   def getWeights(self, gameState, action):
-    return {'successorScore': 100, 'distanceToFood': -1}
+    if(self.getScore(gameState) >= 2):
+      return self.getWeightsDef(gameState, action)
+    else:
+      return {'successorScore': 100, 'distanceToFood': -1}
+
+  def getWeightsDef(self, gameState, action):
+    return {'numInvaders': -1000, 'onDefense': 100, 'invaderDistance': -10, 'stop': -100, 'reverse': -2}
 
 class DefensiveTsohgAgent(NamcapCaptureAgent):
   """
