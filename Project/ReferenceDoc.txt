@@ -27,4 +27,11 @@ initial agent functionality
 	- Otherwise, play similar to the baseline defense and hunt enemies in base.
 	- Maybe play around power pellots, or around border?
 - Power pellet
-	- Don't count towards score4
+	- Don't count towards score
+- More things to consider
+	- Avoid ghosts on path back to base.
+	- While no pacman on our side 
+		- Defense should stay near center of arena and ideally around pellet. (If 
+		- If two on defense, one should stay near top, and other near bottom.
+
+	- Maybe get greedier the more the other team scores.

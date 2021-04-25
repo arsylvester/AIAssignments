@@ -1,4 +1,5 @@
 # myTeam.py
+# Pacman agent developed by Andrew Sylvetser and Cameron Meyer for CS 4365.001.
 # ---------
 # Licensing Information:  You are free to use or extend these projects for
 # educational purposes provided that (1) you do not distribute or publish
@@ -128,7 +129,7 @@ class OffensiveNamcapAgent(NamcapCaptureAgent):
 
     if foodLeft <= self.pelletLimit: # Agent will not return until all but two pellets are eaten
       currentPos = gameState.getAgentPosition(self.index)
-      if (currentPos[0] < self.halfwayPoint and self.red) or (currentPos[0] > self.halfwayPoint and not self.red): #If we scored this turn, go back for more points
+      if not gameState.getAgentState(self.index).isPacman: #If we scored this turn, go back for more points
         self.pelletLimit -= 2
       #elif(gameState.getAgentPosition(self.index) <)
       bestDist = 9999
@@ -194,6 +195,11 @@ class OffensiveNamcapAgent(NamcapCaptureAgent):
     if len(invaders) > 0:
       dists = [self.getMazeDistance(myPos, a.getPosition()) for a in invaders]
       features['invaderDistance'] = min(dists)
+    else: #If no enemy pacman on our side, stay in the close third towards the center. TODO: If both agents are on defense, on go north and one stay south.
+      if (self.red and action == Directions.WEST) or (not self.red and action == Directions.EAST):
+        closeThird = self.halfwayPoint / 2
+        if(self.red and myPos[0] <= self.halfwayPoint - closeThird) or (not self.red and myPos[0] > self.halfwayPoint + closeThird):
+          features['centerDistance'] = 1
 
     if action == Directions.STOP: features['stop'] = 1
     rev = Directions.REVERSE[gameState.getAgentState(self.index).configuration.direction]
@@ -253,6 +259,11 @@ class DefensiveTsohgAgent(NamcapCaptureAgent):
     if len(invaders) > 0:
       dists = [self.getMazeDistance(myPos, a.getPosition()) for a in invaders]
       features['invaderDistance'] = min(dists)
+    else: #If no enemy pacman on our side, stay in the close third towards the center. TODO: If both agents are on defense, on go north and one stay south.
+      if (self.red and action == Directions.WEST) or (not self.red and action == Directions.EAST):
+        closeThird = self.halfwayPoint / 3
+        if(self.red and myPos[0] <= self.halfwayPoint - closeThird) or (not self.red and myPos[0] > self.halfwayPoint + closeThird):
+          features['centerDistance'] = 1
 
     if action == Directions.STOP: features['stop'] = 1
     rev = Directions.REVERSE[gameState.getAgentState(self.index).configuration.direction]
@@ -261,7 +272,7 @@ class DefensiveTsohgAgent(NamcapCaptureAgent):
     return features
 
   def getWeights(self, gameState, action):
-    return {'numInvaders': -1000, 'onDefense': 100, 'invaderDistance': -10, 'stop': -100, 'reverse': -2}
+    return {'numInvaders': -1000, 'onDefense': 100, 'invaderDistance': -10, 'stop': -100, 'reverse': -2, 'centerDistance': -5}
 
 class DummyAgent(CaptureAgent):
   """
