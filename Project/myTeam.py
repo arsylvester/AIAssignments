@@ -168,7 +168,16 @@ class OffensiveNamcapAgent(NamcapCaptureAgent):
 
       if self.fleeing: # Agent will not return until all but two pellets are eaten
         myPos = successor.getAgentPosition(self.index)
-        minDistance = self.getMazeDistance(myPos, self.start)
+
+        minDistance = 1000000
+        for i in range(len(gameState.getRedFood()[1])):
+          hwp = self.halfwayPoint
+          if not self.red:
+            hwp += 1
+          if not gameState.hasWall(hwp, i):
+            manhattanDist = self.getMazeDistance(myPos, (hwp, i))
+            minDistance = min(minDistance, manhattanDist)
+
         features['distanceToBase'] = minDistance
         if(not successor.getAgentState(self.index).isPacman):
           features['successorScore'] = 1
