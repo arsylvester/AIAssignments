@@ -35,3 +35,4 @@ initial agent functionality
 		- If two on defense, one should stay near top, and other near bottom.
 
 	- Maybe get greedier the more the other team scores.
+	- If enemy gets power pellet, run and maybe play offense.

@@ -1,5 +1,5 @@
 # myTeam.py
-# Pacman agent developed by Andrew Sylvetser and Cameron Meyer for CS 4365.001.
+# Pacman agent developed by Andrew Sylvester and Cameron Meyer for CS 4365.001.
 # ---------
 # Licensing Information:  You are free to use or extend these projects for
 # educational purposes provided that (1) you do not distribute or publish
@@ -57,6 +57,7 @@ class NamcapCaptureAgent(CaptureAgent):
     self.pelletLimit = len(self.getFood(gameState).asList()) - 2 #Pellet limit that when reached the agents will return to their side. Value hardcoded for now
     CaptureAgent.registerInitialState(self, gameState)
     self.halfwayPoint = len(gameState.getRedFood()[0])
+    self.verticalHalfwayPoint = len(gameState.getRedFood()[1]) /2
     #print(len(gameState.getRedFood()[0]))
     #print(gameState.getAgentState(self.index).getPosition())
 
@@ -200,6 +201,12 @@ class OffensiveNamcapAgent(NamcapCaptureAgent):
         closeThird = self.halfwayPoint / 2
         if(self.red and myPos[0] <= self.halfwayPoint - closeThird) or (not self.red and myPos[0] > self.halfwayPoint + closeThird):
           features['centerDistance'] = 1
+      teamMate = self.getTeam(gameState)[0]
+      if teamMate == self.index:
+        teamMate = self.getTeam(gameState)[1]
+      if not successor.getAgentState(teamMate).isPacman and self.getScore(successor) > 0: #If both ghosts playing defense
+        if myPos[1] > self.verticalHalfwayPoint:
+          features['stayTop'] = 1
 
     if action == Directions.STOP: features['stop'] = 1
     rev = Directions.REVERSE[gameState.getAgentState(self.index).configuration.direction]
@@ -214,7 +221,7 @@ class OffensiveNamcapAgent(NamcapCaptureAgent):
       return {'successorScore': 100, 'distanceToFood': -1, 'isGhost': 1000}
 
   def getWeightsDef(self, gameState, action):
-    return {'numInvaders': -1000, 'onDefense': 100, 'invaderDistance': -10, 'stop': -100, 'reverse': -2}
+    return {'numInvaders': -1000, 'onDefense': 100, 'invaderDistance': -10, 'stop': -100, 'reverse': -2, 'centerDistance': -5, 'stayTop': -2} 
 
 class DefensiveTsohgAgent(NamcapCaptureAgent):
   """
@@ -264,6 +271,13 @@ class DefensiveTsohgAgent(NamcapCaptureAgent):
         closeThird = self.halfwayPoint / 3
         if(self.red and myPos[0] <= self.halfwayPoint - closeThird) or (not self.red and myPos[0] > self.halfwayPoint + closeThird):
           features['centerDistance'] = 1
+      teamMate = self.getTeam(gameState)[0]
+      if teamMate == self.index:
+        teamMate = self.getTeam(gameState)[1]
+      if not successor.getAgentState(teamMate).isPacman and self.getScore(successor) > 0: #If both ghosts playing defense
+        if myPos[1] < self.verticalHalfwayPoint:
+          features['stayTop'] = 1
+          
 
     if action == Directions.STOP: features['stop'] = 1
     rev = Directions.REVERSE[gameState.getAgentState(self.index).configuration.direction]
@@ -272,7 +286,7 @@ class DefensiveTsohgAgent(NamcapCaptureAgent):
     return features
 
   def getWeights(self, gameState, action):
-    return {'numInvaders': -1000, 'onDefense': 100, 'invaderDistance': -10, 'stop': -100, 'reverse': -2, 'centerDistance': -5}
+    return {'numInvaders': -1000, 'onDefense': 100, 'invaderDistance': -10, 'stop': -100, 'reverse': -2, 'centerDistance': -5, 'stayTop': -2}
 
 class DummyAgent(CaptureAgent):
   """
