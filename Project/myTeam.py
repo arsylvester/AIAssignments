@@ -58,6 +58,7 @@ class NamcapCaptureAgent(CaptureAgent):
     CaptureAgent.registerInitialState(self, gameState)
     self.halfwayPoint = len(gameState.getRedFood()[0])
     self.verticalHalfwayPoint = len(gameState.getRedFood()[1]) /2
+    self.fleeing = False
     #print(len(gameState.getRedFood()[0]))
     #print(gameState.getAgentState(self.index).getPosition())
 
@@ -78,7 +79,6 @@ class NamcapCaptureAgent(CaptureAgent):
     Computes a linear combination of features and feature weights
     """
     features = self.getFeatures(gameState, action)
-    #print(features)
     weights = self.getWeights(gameState, action)
     return features * weights
     """
@@ -128,10 +128,17 @@ class OffensiveNamcapAgent(NamcapCaptureAgent):
 
     foodLeft = len(self.getFood(gameState).asList())
 
+    #print(self.fleeing)
     if foodLeft <= self.pelletLimit: # Agent will not return until all but two pellets are eaten
-      currentPos = gameState.getAgentPosition(self.index)
+      #currentPos = gameState.getAgentPosition(self.index)
       if not gameState.getAgentState(self.index).isPacman: #If we scored this turn, go back for more points
         self.pelletLimit -= 2
+        self.fleeing = False
+      else:
+        self.fleeing = True
+    else:
+      self.fleeing = False
+    '''
       #elif(gameState.getAgentPosition(self.index) <)
       bestDist = 9999
       #print("Is returning to our side")
@@ -144,6 +151,7 @@ class OffensiveNamcapAgent(NamcapCaptureAgent):
           bestAction = action
           bestDist = dist
       return bestAction
+    '''
 
     return random.choice(bestActions)
   """
@@ -156,14 +164,29 @@ class OffensiveNamcapAgent(NamcapCaptureAgent):
       features = util.Counter()
       successor = self.getSuccessor(gameState, action)
       foodList = self.getFood(successor).asList()    
-      features['successorScore'] = -len(foodList)#self.getScore(successor)
+      #self.getScore(successor)
 
-      # Compute distance to the nearest food
+      if self.fleeing: # Agent will not return until all but two pellets are eaten
+        myPos = successor.getAgentPosition(self.index)
+        minDistance = self.getMazeDistance(myPos, self.start)
+        features['distanceToBase'] = minDistance
+        if(not successor.getAgentState(self.index).isPacman):
+          features['successorScore'] = 1
+      else:
+        features['successorScore'] = -len(foodList)
+        # Compute distance to the nearest food
+        if len(foodList) > 0: # This should always be True,  but better safe than sorry
+          myPos = successor.getAgentState(self.index).getPosition()
+          minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
+          features['distanceToFood'] = minDistance
 
-      if len(foodList) > 0: # This should always be True,  but better safe than sorry
-        myPos = successor.getAgentState(self.index).getPosition()
-        minDistance = min([self.getMazeDistance(myPos, food) for food in foodList])
-        features['distanceToFood'] = minDistance
+      # Computes distance to Ghosts we can see
+      enemies = [successor.getAgentState(i) for i in self.getOpponents(successor)]
+      ghosts = [a for a in enemies if not a.isPacman and a.getPosition() != None]
+      if len(ghosts) > 0 and successor.getAgentState(self.index).isPacman:
+        dists = [self.getMazeDistance(myPos, a.getPosition()) for a in ghosts]
+        features['distanceToEnemyGhost'] = min(dists)
+
       """
       #If action leads to a ghost don't go that way
       #print(successor.getAgentPosition(self.getOpponents(gameState)[0]))
@@ -218,7 +241,7 @@ class OffensiveNamcapAgent(NamcapCaptureAgent):
     if(self.getScore(gameState) >= 2):
       return self.getWeightsDef(gameState, action)
     else:
-      return {'successorScore': 100, 'distanceToFood': -1, 'isGhost': 1000}
+      return {'successorScore': 100, 'distanceToFood': -2, 'isGhost': 1000, 'distanceToEnemyGhost': 1, 'distanceToBase': -2}
 
   def getWeightsDef(self, gameState, action):
     return {'numInvaders': -1000, 'onDefense': 100, 'invaderDistance': -10, 'stop': -100, 'reverse': -2, 'centerDistance': -5, 'stayTop': -2} 
