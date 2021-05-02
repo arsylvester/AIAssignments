@@ -172,7 +172,9 @@ class OffensiveNamcapAgent(NamcapCaptureAgent):
         minDistance = 1000000
         for i in range(len(gameState.getRedFood()[1])):
           hwp = self.halfwayPoint
-          if not self.red:
+          if self.red:
+            hwp -= 1
+          else:
             hwp += 1
           if not gameState.hasWall(hwp, i):
             manhattanDist = self.getMazeDistance(myPos, (hwp, i))
